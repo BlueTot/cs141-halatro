@@ -1,0 +1,22 @@
+? /dcs/24/u5594153/year1/cs141/cs141-halatro/.stack-work/dist/x86_64-linux/Cabal-3.8.1.0/build/halatro-exe/autogen/Paths_halatro.hs
+: hash: fec932874a6dad110a374cb8b36fbf3c0a24ef55aa0b31e0a2f7c979d2f3d894
+/dcs/24/u5594153/year1/cs141/cs141-halatro/.stack-work/dist/x86_64-linux/Cabal-3.8.1.0/build/halatro-exe/autogen/cabal_macros.h:
+  hash: 7165f7fe121c385ab5a0a8b73f3341c41405c300a1f0473885b451bf5c12bf03
+/dcs/24/u5594153/year1/cs141/cs141-halatro/app/Halatro/Frontend.hs:
+  hash: ea4e9c65f00e39648af2f0fd184b76d23069528bb1807a2cd5cf24805a00f6e6
+/dcs/24/u5594153/year1/cs141/cs141-halatro/app/Halatro/Frontend/Types.hs:
+  hash: 162a766d9c782b14b84691ca3cd28afeb0b2660d428099c96872c48300545280
+/dcs/24/u5594153/year1/cs141/cs141-halatro/app/Halatro/Frontend/Utils.hs:
+  hash: 85499ef118702200c6e24a32ae7a951d920d75c71191e90c3cb0282f0d48c406
+/dcs/24/u5594153/year1/cs141/cs141-halatro/app/Halatro/Frontend/Widgets.hs:
+  hash: e2989c5ced264f3692fd85ebe93a432f794c0de3e325d3d33d38ed9fa62aae27
+/dcs/24/u5594153/year1/cs141/cs141-halatro/app/Main.hs:
+  hash: 83b17401f180d52e0ecd673453b64fdeb574208008bfbd6c98d4778f03df8e6a
+/dcs/24/u5594153/year1/cs141/cs141-halatro/halatro.cabal:
+  hash: 97abad980963c82a0c29f4d10e39efabd179181d0e23e3e67decb6e745219c0b
+/dcs/24/u5594153/year1/cs141/cs141-halatro/package.yaml:
+  hash: 38e1cddefeff94b1a8b9b72550f04a93244a9c52e03487ecbe21de7ccf4d0795
+/modules/cs141/.ghcup/ghc/9.4.8/lib/ghc-9.4.8/lib/x86_64-linux-ghc-9.4.8/rts-1.0.2/include/ghcversion.h:
+  hash: 4bc88722407a89d1efbfa9c116cd4017af6ea3ff746643032b96cef62782f5dd
+/usr/include/stdc-predef.h:
+  hash: 38bac01c137da3ec6623c5166d420cd0bdee18e1d6605921f138f74ef902f102
