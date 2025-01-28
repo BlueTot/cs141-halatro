@@ -39,16 +39,16 @@ uniqueRanks hand = toList $ fromList (ranks hand)
 
 -- Function to check if a hand is ascending
 isAscending :: Hand -> Bool
-isAscending hand = 
+isAscending hand =
     let
         scores = sort $ map rankScore $ ranks hand
-    in 
+    in
         case scores of
             [2, 3, 4, 5, 11] -> True
             _ -> and [b - a == 1 | (a, b) <- zip scores (tail scores)]
 
 isStraight :: Hand -> Bool
-isStraight hand = 
+isStraight hand =
     let
         handRanks = sort $ ranks hand
     in
@@ -83,8 +83,12 @@ contains hand handType
 --------------------------------------------------------------------------------
 -- Part 2: identify the highest value hand type in a played hand
 
+bestHandTypeFrom :: Hand -> [HandType] -> HandType
+bestHandTypeFrom _ [] = None
+bestHandTypeFrom hand (x:xs) = if contains hand x then x else bestHandTypeFrom hand xs
+
 bestHandType :: Hand -> HandType
-bestHandType = error "Not implemented"
+bestHandType hand = bestHandTypeFrom hand $ reverse [None ..]
 
 --------------------------------------------------------------------------------
 -- Part 3: score a played hand
