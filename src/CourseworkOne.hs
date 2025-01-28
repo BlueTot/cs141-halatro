@@ -83,21 +83,61 @@ contains hand handType
 --------------------------------------------------------------------------------
 -- Part 2: identify the highest value hand type in a played hand
 
+-- Function to get the best hand type from a list of possible hand types
 bestHandTypeFrom :: Hand -> [HandType] -> HandType
 bestHandTypeFrom _ [] = None
 bestHandTypeFrom hand (x:xs) = if contains hand x then x else bestHandTypeFrom hand xs
 
+-- Main function for Exericse 2
 bestHandType :: Hand -> HandType
 bestHandType hand = bestHandTypeFrom hand $ reverse [None ..]
 
 --------------------------------------------------------------------------------
 -- Part 3: score a played hand
 
-whichCardsScore :: Hand -> [Card]
-whichCardsScore = error "Not implemented"
+-- Function to count number of times each rank occurs in the hand
+counterRank :: Hand -> [(Rank, Int)]
+counterRank hand = [(r, numOccurrences hand r) | r <- [Two ..]]
 
+-- Function to get the ranks with a certain count in the hand
+rankWithCount :: Hand -> Int -> [Rank]
+rankWithCount hand count = map fst $ filter (\(_, c) -> c == count) $ counterRank hand
+
+-- Function to get the score of the highest rank in the hand
+highestRankScore :: Hand -> Int
+highestRankScore hand = maximum (map rankScore (ranks hand))
+
+-- Main function for Exercise 3
+whichCardsScore :: Hand -> [Card]
+whichCardsScore hand =
+    let
+        pairs = rankWithCount hand 2
+        triplets = rankWithCount hand 3
+        quads = rankWithCount hand 4
+    in case bestHandType hand of
+        None -> []
+        HighCard -> [maximum hand]
+        Pair -> filter (\(Card r _) -> r `elem` pairs) hand
+        TwoPair -> filter (\(Card r _) -> r `elem` pairs) hand
+        ThreeOfAKind -> filter (\(Card r _) -> r `elem` triplets) hand
+        Straight -> hand
+        Flush -> hand
+        FullHouse -> hand
+        FourOfAKind -> filter (\(Card r _) -> r `elem` quads) hand
+        StraightFlush -> hand
+        RoyalFlush -> hand
+
+-- Main function for Exercise 4
 scoreHand :: Hand -> Int
-scoreHand = error "Not implemented"
+scoreHand hand = 
+    let
+        scoreCards = whichCardsScore hand
+        best = bestHandType hand
+        base = fst (handTypeValues best)
+        mult = snd (handTypeValues best)
+        cardVals = sum (map (rankScore . (\(Card r _) -> r)) scoreCards)
+    in
+        (base + cardVals) * mult
 
 --------------------------------------------------------------------------------
 -- Part 4: find the highest scoring hand of 5 cards out of n>=5 cards
