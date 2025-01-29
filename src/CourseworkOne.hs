@@ -154,12 +154,16 @@ combinations xs k = [x : y | x <- xs, y <- combinations xs (k-1), isLessThanStar
 
 -- Main function for Exercise 5
 highestScoringHand :: [Card] -> Hand
+highestScoringHand [] = []
 highestScoringHand xs =
     let
-        maxScore = maximum $ map scoreHand (combinations xs 5)
+        outputLength = min 5 (length xs)
+        allCombinations = concat [combinations xs l | l <- [1 .. outputLength]]
+        maxScore = maximum $ map scoreHand allCombinations
+        maxHands = filter (\c -> scoreHand c == maxScore) allCombinations
+        minLength = minimum $ map length maxHands
     in
-        head (filter (\c -> scoreHand c == maxScore) $ combinations xs 5)
-
+        head (filter (\c -> length c == minLength) maxHands)
 
 --------------------------------------------------------------------------------
 -- Part 5: implement an AI for maximising score across 3 hands and 3 discards
