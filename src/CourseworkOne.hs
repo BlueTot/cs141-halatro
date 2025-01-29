@@ -2,7 +2,7 @@ module CourseworkOne where
 
 -- import Halatro.Constants
 import Halatro.Types
-import Halatro.Constants
+import Halatro.Constants ( rankScore, handTypeValues )
 import Data.Set (toList, fromList)
 import Data.List (sort)
 
@@ -171,11 +171,14 @@ highestScoringHand xs =
 --------------------------------------------------------------------------------
 -- Part 5: implement an AI for maximising score across 3 hands and 3 discards
 
+-- Main function for Exercise 6
 simpleAI :: [Move] -> [Card] -> Move
-simpleAI = error "Not implemented"
+simpleAI _ cards = Move Play $ take 5 $ reverse $ sort cards
 
+-- Main function for Exercise 7
 sensibleAI :: [Move] -> [Card] -> Move
-sensibleAI = error "Not implemented"
+sensibleAI _ cards = Move Play $ highestScoringHand cards
 
+-- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
 myAI = error "Not implemented"
