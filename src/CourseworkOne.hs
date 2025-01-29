@@ -162,8 +162,11 @@ highestScoringHand xs =
         maxScore = maximum $ map scoreHand allCombinations
         maxHands = filter (\c -> scoreHand c == maxScore) allCombinations
         minLength = minimum $ map length maxHands
+        choices = filter (\c -> length c == minLength) maxHands
     in
-        head (filter (\c -> length c == minLength) maxHands)
+        case minLength of
+            1 -> [maximum $ map head choices]
+            _ -> head choices
 
 --------------------------------------------------------------------------------
 -- Part 5: implement an AI for maximising score across 3 hands and 3 discards
