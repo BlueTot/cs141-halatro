@@ -129,7 +129,7 @@ whichCardsScore hand =
 
 -- Main function for Exercise 4
 scoreHand :: Hand -> Int
-scoreHand hand = 
+scoreHand hand =
     let
         scoreCards = whichCardsScore hand
         best = bestHandType hand
@@ -142,8 +142,24 @@ scoreHand hand =
 --------------------------------------------------------------------------------
 -- Part 4: find the highest scoring hand of 5 cards out of n>=5 cards
 
+-- Function to check if a card is less than all of the first card in the list if it exists
+isLessThanStarting :: [Card] -> Card -> Bool
+isLessThanStarting [] _ = True
+isLessThanStarting (x:_) y = y < x
+
+-- Function to get all possible combinations of 5 cards out of n >= 5 cards
+combinations :: [Card] -> Int -> [Hand]
+combinations _ 0 = [[]]
+combinations xs k = [x : y | x <- xs, y <- combinations xs (k-1), isLessThanStarting y x]
+
+-- Main function for Exercise 5
 highestScoringHand :: [Card] -> Hand
-highestScoringHand = error "Not implemented"
+highestScoringHand xs =
+    let
+        maxScore = maximum $ map scoreHand (combinations xs 5)
+    in
+        head (filter (\c -> scoreHand c == maxScore) $ combinations xs 5)
+
 
 --------------------------------------------------------------------------------
 -- Part 5: implement an AI for maximising score across 3 hands and 3 discards
