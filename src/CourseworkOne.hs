@@ -52,14 +52,14 @@ isStraight hand =
     let
         handRanks = sort $ ranks hand
     in
-        handRanks == [Two, Three, Four, Five, Ace] ||
-        handRanks == [Ten, Jack, Queen, King, Ace] || isAscending hand
+        length hand == 5 && (handRanks == [Two, Three, Four, Five, Ace] ||
+        handRanks == [Ten, Jack, Queen, King, Ace] || isAscending hand)
 
 isHighCard :: Hand -> Bool
-isHighCard hand = not (isStraight hand) && length (uniqueRanks hand) == 5
+isHighCard hand = not (null hand) && not (isStraight hand) && length (uniqueRanks hand) == length hand
 
 isFlush :: Hand -> Bool
-isFlush hand = length (uniqueSuites hand) == 1
+isFlush hand = length (uniqueSuites hand) == 1 && length hand == 5
 
 isRoyal :: Hand -> Bool
 isRoyal hand = sort (ranks hand) == [Ten, Jack, Queen, King, Ace]
@@ -178,7 +178,11 @@ simpleAI _ cards = Move Play $ take 5 $ reverse $ sort cards
 -- Main function for Exercise 7
 sensibleAI :: [Move] -> [Card] -> Move
 sensibleAI _ cards = Move Play $ highestScoringHand cards
+-- sensibleAI _ cards = 
+--     let best = highestScoringHand cards
+--     in Move Play (best ++ take (5 - length best) (cards \\ best))
 
 -- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
-myAI = error "Not implemented"
+myAI = sensibleAI
+-- myAI = error "Not implemented"
