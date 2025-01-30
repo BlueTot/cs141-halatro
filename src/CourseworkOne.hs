@@ -4,7 +4,7 @@ module CourseworkOne where
 import Halatro.Types
 import Halatro.Constants ( rankScore, handTypeValues )
 import Data.Set (toList, fromList)
-import Data.List (sort)
+import Data.List (sort, (\\))
 
 --------------------------------------------------------------------------------
 -- Part 1: check whether a played hand is a certain hand type
@@ -142,31 +142,35 @@ scoreHand hand =
 --------------------------------------------------------------------------------
 -- Part 4: find the highest scoring hand of 5 cards out of n>=5 cards
 
--- Function to check if a card is less than all of the first card in the list if it exists
-isLessThanStarting :: [Card] -> Card -> Bool
+-- Function to check if an item is less than or equal to another item
+isLessThanStarting :: Ord a => [a] -> a -> Bool
 isLessThanStarting [] _ = True
-isLessThanStarting (x:_) y = y < x
+isLessThanStarting (x:_) y = y <= x
 
--- Function to get all possible combinations of 5 cards out of n >= 5 cards
-combinations :: [Card] -> Int -> [Hand]
+-- Function to remove duplicates from a list
+removeDuplicates :: Ord a => [a] -> [a]
+removeDuplicates xs = toList $ fromList xs
+
+-- Function to get all possible combinations of r items from n >= r items
+combinations :: Ord a => [a] -> Int -> [[a]]
 combinations _ 0 = [[]]
-combinations xs k = [x : y | x <- xs, y <- combinations xs (k-1), isLessThanStarting y x]
+combinations xs k = removeDuplicates [x : y | x <- xs, y <- combinations (xs \\ [x]) (k-1), isLessThanStarting y x]
 
 -- Main function for Exercise 5
 highestScoringHand :: [Card] -> Hand
 highestScoringHand [] = []
 highestScoringHand xs =
-    let
+    let 
         outputLength = min 5 (length xs)
-        allCombinations = concat [combinations xs l | l <- [1 .. outputLength]]
+        allCombinations = combinations xs outputLength
         maxScore = maximum $ map scoreHand allCombinations
         maxHands = filter (\c -> scoreHand c == maxScore) allCombinations
-        minLength = minimum $ map length maxHands
-        choices = filter (\c -> length c == minLength) maxHands
-    in
-        case minLength of
-            1 -> [maximum $ map head choices]
-            _ -> head choices
+        choice = head maxHands
+    in case bestHandType choice of
+        HighCard -> 
+            let largest = maximum $ map maximum maxHands
+            in head $ filter (\h -> maximum h == largest) maxHands
+        _ -> choice
 
 --------------------------------------------------------------------------------
 -- Part 5: implement an AI for maximising score across 3 hands and 3 discards
@@ -178,9 +182,6 @@ simpleAI _ cards = Move Play $ take 5 $ reverse $ sort cards
 -- Main function for Exercise 7
 sensibleAI :: [Move] -> [Card] -> Move
 sensibleAI _ cards = Move Play $ highestScoringHand cards
--- sensibleAI _ cards = 
---     let best = highestScoringHand cards
---     in Move Play (best ++ take (5 - length best) (cards \\ best))
 
 -- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
