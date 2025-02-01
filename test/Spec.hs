@@ -90,9 +90,13 @@ testPartOne =
                 ),
                 ( Straight,
                   [ [2 @ H, 3 @ D, 4 @ C, 5 @ S, 6 @ H],
-                    [10 @ H, J @ H, Q @ H, K @ H, A @ H]
+                    [10 @ H, J @ H, Q @ H, K @ H, A @ H],
+                    -- this is a custom test, made by me!
+                    [7 @ H, 8 @ H, 9 @ H, 10 @ H, J @ H]
                   ],
-                  [[J @ H, Q @ D, K @ H, A @ H, 2 @ H]]
+                  [[J @ H, Q @ D, K @ H, A @ H, 2 @ H],
+                  -- this is a custom test, made by me!
+                  [7 @ H, 8 @ H, 9 @ H, Q @ H, A @ H]]
                 ),
                 ( Flush,
                   [ [2 @ H, 3 @ H, 4 @ H, 5 @ H, 6 @ H],

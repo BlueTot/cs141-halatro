@@ -17,10 +17,6 @@ numOccurrences hand cardRank = length $ filter (\(Card r _) -> r == cardRank) ha
 countRanks :: Hand -> [Int]
 countRanks hand = filter (> 0) [numOccurrences hand r | r <- [Two ..]]
 
--- -- Get number of instances of a given occurrence in the list of occurrences of a hand
--- numRanks :: Hand -> Int -> Int
--- numRanks hand count = length $ filter (==count) $ countRanks hand
-
 -- Check if there are at least k instances of a given occurrence or higher in the list of occurrences of a hand
 enoughRankCount :: Hand -> Int -> Int -> Bool
 enoughRankCount hand count target = length (filter (>=count) $ countRanks hand) == target
@@ -41,12 +37,13 @@ uniqueRanks hand = toList $ fromList (ranks hand)
 isAscending :: Hand -> Bool
 isAscending hand =
     let
-        scores = sort $ map rankScore $ ranks hand
+        scores = sort $ map fromEnum $ ranks hand
     in
         case scores of
             [2, 3, 4, 5, 11] -> True
             _ -> and [b - a == 1 | (a, b) <- zip scores (tail scores)]
 
+-- Function to check if a hand is straight
 isStraight :: Hand -> Bool
 isStraight hand =
     let
@@ -55,12 +52,15 @@ isStraight hand =
         length hand == 5 && (handRanks == [Two, Three, Four, Five, Ace] ||
         handRanks == [Ten, Jack, Queen, King, Ace] || isAscending hand)
 
+-- Function to check if a hand is a high card
 isHighCard :: Hand -> Bool
 isHighCard hand = not (null hand) && not (isStraight hand) && length (uniqueRanks hand) == length hand
 
+-- Function to check if a hand is flush
 isFlush :: Hand -> Bool
 isFlush hand = length (uniqueSuites hand) == 1 && length hand == 5
 
+-- Function to check if a hand is royal (equal to ranks 10, J, Q, K, A)
 isRoyal :: Hand -> Bool
 isRoyal hand = sort (ranks hand) == [Ten, Jack, Queen, King, Ace]
 
@@ -186,4 +186,3 @@ sensibleAI _ cards = Move Play $ highestScoringHand cards
 -- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
 myAI = sensibleAI
--- myAI = error "Not implemented"
