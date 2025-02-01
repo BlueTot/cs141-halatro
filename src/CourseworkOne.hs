@@ -4,18 +4,23 @@ module CourseworkOne where
 import Halatro.Types
 import Halatro.Constants ( rankScore, handTypeValues )
 import Data.Set (toList, fromList)
-import Data.List (sort, (\\))
+import Data.List (sort, (\\), sortBy)
+import Data.Ord (comparing)
 
 --------------------------------------------------------------------------------
 -- Part 1: check whether a played hand is a certain hand type
 
 -- Function to count the number of occurrences of a given rank in a hand
-numOccurrences :: Hand -> Rank -> Int
-numOccurrences hand cardRank = length $ filter (\(Card r _) -> r == cardRank) hand
+numOccurrencesRank :: Hand -> Rank -> Int
+numOccurrencesRank hand cardRank = length $ filter (\(Card r _) -> r == cardRank) hand
+
+-- Function to count the number of occurrences of a given suit in a hand
+numOccurrencesSuit :: Hand -> Suit -> Int
+numOccurrencesSuit hand cardSuit = length $ filter(\(Card _ s) -> s == cardSuit) hand
 
 -- Function to count the occurrences of each rank in a hand
 countRanks :: Hand -> [Int]
-countRanks hand = filter (> 0) [numOccurrences hand r | r <- [Two ..]]
+countRanks hand = filter (> 0) [numOccurrencesRank hand r | r <- [Two ..]]
 
 -- Check if there are at least k instances of a given occurrence or higher in the list of occurrences of a hand
 enoughRankCount :: Hand -> Int -> Int -> Bool
@@ -97,7 +102,7 @@ bestHandType hand = bestHandTypeFrom hand $ reverse [None ..]
 
 -- Function to count number of times each rank occurs in the hand
 counterRank :: Hand -> [(Rank, Int)]
-counterRank hand = [(r, numOccurrences hand r) | r <- [Two ..]]
+counterRank hand = [(r, numOccurrencesRank hand r) | r <- [Two ..]]
 
 -- Function to get the ranks with a certain count in the hand
 rankWithCount :: Hand -> Int -> [Rank]
@@ -183,6 +188,31 @@ simpleAI _ cards = Move Play $ take 5 $ reverse $ sort cards
 sensibleAI :: [Move] -> [Card] -> Move
 sensibleAI _ cards = Move Play $ highestScoringHand cards
 
+-- Function to get best hand type from the hand of eight
+bestHandTypeFromHand :: [Card] -> HandType
+bestHandTypeFromHand hand = maximum $ map bestHandType (combinations hand 5)
+
+-- Function to evaluate each card, the greater the value the better it is
+evaluateCard :: Hand -> Card -> Float
+evaluateCard hand card =
+    let
+        countRankComponent = 2 * 2 * numOccurrencesRank hand (rank card)
+        countSuitComponent = 2 * numOccurrencesSuit hand (suit card)
+        cardValue = 0.25 * fromIntegral (fromEnum $ rank card)
+    in
+        fromIntegral (countRankComponent + countSuitComponent) + cardValue
+
+isDiscard :: Move -> Bool
+isDiscard move = case move of
+    Move Play _ -> False
+    Move Discard _ -> True
+
+numDiscards :: [Move] -> Int
+numDiscards moveHistory = 3 - length (filter isDiscard moveHistory)
+
 -- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
-myAI = sensibleAI
+myAI moveHistory cards
+    | numDiscards moveHistory > 0 && best < Straight = Move Discard $ take 5 (sortBy (comparing $ evaluateCard cards) cards)
+    | otherwise = Move Play $ highestScoringHand cards
+    where best = bestHandTypeFromHand cards
