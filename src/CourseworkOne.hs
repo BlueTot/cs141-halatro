@@ -234,6 +234,10 @@ rankCountAtLeast cards minCount = map fst $ filter (\(_, c) -> c >= minCount) $ 
 cardsWithRankCountAtLeast :: [Card] -> Int -> [[Card]]
 cardsWithRankCountAtLeast cards minCount = [take minCount (filter (\c -> rank c == currRank) cards) | currRank <- rankCountAtLeast cards minCount]
 
+-- Function that gets the cards that have a rank that occur equal to a given amount of time
+cardsWithRankCount :: [Card] -> Int -> [[Card]]
+cardsWithRankCount cards count = [take count (filter (\c -> rank c == currRank) cards) | currRank <- rankWithCount cards count]
+
 -- Function that returns the best N of a kind and score if exist, and nothing otherwise
 bestNOfAKind :: [Card] -> Int -> Maybe (Hand, Int)
 bestNOfAKind cards n = 
@@ -246,8 +250,8 @@ bestNOfAKind cards n =
 bestFullHouse :: [Card] -> Maybe (Hand, Int)
 bestFullHouse cards =
     let
-        triples = cardsWithRankCountAtLeast cards 3
-        pairs = cardsWithRankCountAtLeast cards 2
+        triples = cardsWithRankCount cards 3
+        pairs = cardsWithRankCount cards 2
     in case (triples, pairs) of
         (_:_, _:_) -> let 
             tripleChoice = fst $ maxKey triples (rank . head)
@@ -292,6 +296,7 @@ bestFlushes cards =
 
 -- Main Function for Exercise 5
 highestScoringHand :: [Card] -> Hand
+highestScoringHand [] = []
 highestScoringHand hand = 
     let options = [bestRoyalFlush hand
                   ,bestStraightFlush hand
@@ -381,3 +386,4 @@ myAI moveHistory cards
     | numDiscards moveHistory > 0 && bestScore < 200 = Move Discard $ take 5 (sortBy (comparing $ evaluateCard cards) cards)
     | otherwise = Move Play $ highestScoringHand cards
     where bestScore = scoreHand $ highestScoringHand cards
+-- myAI = sensibleAI
