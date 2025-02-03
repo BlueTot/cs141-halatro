@@ -1,5 +1,5 @@
 /dcs/24/u5594153/year1/cs141/cs141-halatro/.stack-work/dist/x86_64-linux/Cabal-3.8.1.0/build/autogen/Paths_halatro.hs:
-  hash: bfb1a58a94c765828f4fc24e9226eb9964b3d0ff8682d776495b828cc7be258c
+  hash: 4c25efdb25fd48adaf6be0ce3d736b6cd4ea97eaf11e074d6898d3bc676cbcd4
 /dcs/24/u5594153/year1/cs141/cs141-halatro/.stack-work/dist/x86_64-linux/Cabal-3.8.1.0/build/autogen/cabal_macros.h:
   hash: 58d1a09e821b318e4405d5e1e9df34c3b6f9effc3c56d0a098ff16bafb4002ae
 /dcs/24/u5594153/year1/cs141/cs141-halatro/halatro.cabal:
@@ -7,7 +7,7 @@
 /dcs/24/u5594153/year1/cs141/cs141-halatro/package.yaml:
   hash: 38e1cddefeff94b1a8b9b72550f04a93244a9c52e03487ecbe21de7ccf4d0795
 /dcs/24/u5594153/year1/cs141/cs141-halatro/src/CourseworkOne.hs:
-  hash: 1b86c02f209e0c12be51d073de97817a4adb807e90f2716d590fa011c3bcd7fd
+  hash: 94114d8a57b43a3f779bb439b244f5ca3e6200ea41520f4f72e6e761e4244a9c
 /dcs/24/u5594153/year1/cs141/cs141-halatro/src/Halatro/BasicGame.hs:
   hash: 65861218bc63d772cd22f42436db7c03740aeda1ca1dbbdebc142421cf9994dc
 /dcs/24/u5594153/year1/cs141/cs141-halatro/src/Halatro/Constants.hs:

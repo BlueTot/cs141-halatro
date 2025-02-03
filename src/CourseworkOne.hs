@@ -192,6 +192,25 @@ sensibleAI _ cards = Move Play $ highestScoringHand cards
 bestHandTypeFromHand :: [Card] -> HandType
 bestHandTypeFromHand hand = maximum $ map bestHandType (combinations hand 5)
 
+-- Function to get list of ordered ranks from hand of eight
+orderedRanks :: Hand -> [Rank]
+orderedRanks hand = sort $ toList $ fromList $ ranks hand
+
+-- Function to get number of consecutive elements above current position
+numAbove :: [Rank] -> Int
+numAbove [] = 0
+numAbove (x:xs) = case xs of
+    [] -> 1
+    (y:_) -> case abs(fromEnum y - fromEnum x) of
+                1 -> 1 + numAbove xs
+                _ -> 1
+
+numConsecutive :: Hand -> Card -> Int
+numConsecutive hand card = 
+    let
+        sortedRanks = orderedRanks hand
+    in
+
 -- Function to evaluate each card, the greater the value the better it is
 evaluateCard :: Hand -> Card -> Float
 evaluateCard hand card =
@@ -202,11 +221,13 @@ evaluateCard hand card =
     in
         fromIntegral (countRankComponent + countSuitComponent) + cardValue
 
+-- Function to check if a move is a discard
 isDiscard :: Move -> Bool
 isDiscard move = case move of
     Move Play _ -> False
     Move Discard _ -> True
 
+-- Function to check for the number of discards in the move history
 numDiscards :: [Move] -> Int
 numDiscards moveHistory = 3 - length (filter isDiscard moveHistory)
 
