@@ -5,6 +5,8 @@ import Halatro.Constants ( rankScore, handTypeValues )
 import Data.Set (toList, fromList)
 import Data.List (sort, (\\), sortBy, elemIndex)
 import Data.Ord (comparing)
+import Data.Tuple (swap)
+import Data.Maybe (catMaybes)
 
 --------------------------------------------------------------------------------
 -- Part 1: check whether a played hand is a certain hand type
@@ -160,21 +162,149 @@ combinations :: Ord a => [a] -> Int -> [[a]]
 combinations _ 0 = [[]]
 combinations xs k = removeDuplicates [x : y | x <- xs, y <- combinations (xs \\ [x]) (k-1), isLessThanStarting y x]
 
--- Main function for Exercise 5
-highestScoringHand :: [Card] -> Hand
-highestScoringHand [] = []
-highestScoringHand xs =
+-- -- -- Main function for Exercise 5
+-- highestScoringHand :: [Card] -> Hand
+-- highestScoringHand [] = []
+-- highestScoringHand xs =
+--     let
+--         outputLength = min 5 (length xs)
+--         allCombinations = combinations xs outputLength
+--         maxScore = maximum $ map scoreHand allCombinations
+--         maxHands = filter (\c -> scoreHand c == maxScore) allCombinations
+--         choice = head maxHands
+--     in case bestHandType choice of
+--         HighCard ->
+--             let largest = maximum $ map maximum maxHands
+--             in head $ filter (\h -> maximum h == largest) maxHands
+--         _ -> choice
+
+-- List of all of the suits
+allSuits :: [Suit]
+allSuits = [(minBound :: Suit) ..]
+
+-- Function to check if a list contains a sublist in any order
+containsList :: Eq a => [a] -> [a] -> Bool
+containsList sublist xs = and [x `elem` xs | x <- sublist]
+
+-- Function that returns a royal flush of a given suit
+royalFlushSuit :: Suit -> [Card]
+royalFlushSuit s = [Card Ace s, Card King s, Card Queen s, Card Jack s, Card Ten s]
+
+-- Function that returns the best royal flush hand and score if exist, and nothing otherwise
+bestRoyalFlush :: [Card] -> Maybe (Hand, Int)
+bestRoyalFlush hand = 
+    let poss = [sample | s <- allSuits, let sample = royalFlushSuit s, containsList sample hand]
+    in case poss of
+            [] -> Nothing
+            xs -> let choice = head xs
+                    in Just (choice, scoreHand choice)
+
+-- Function to get straights from a list of cards
+straightsFrom :: [Card] -> [Hand]
+straightsFrom [] = []
+straightsFrom (_:xs)
+    | l < 5 = []
+    | otherwise = let curr = take 5 xs 
+        in if isStraight curr
+            then curr : straightsFrom xs
+            else straightsFrom xs
+    where l = length xs
+
+-- Function to get straight flushes from a list of cards
+straightFlushesFrom :: [Card] -> [Hand]
+straightFlushesFrom cards = concat [straightsFrom $ filter (\c -> suit c == s) cards | s <- allSuits]
+
+-- Function to get the maximum key and its score from a list of keys and a scoring function
+maxKey :: (Ord a, Ord b) => [a] -> (a -> b) -> (a, b)
+maxKey xs f = swap $ maximum [(f x, x) | x <- xs]
+
+-- Function that returns the best straight flush and score if exist, and nothing otherwise
+bestStraightFlush :: [Card] -> Maybe (Hand, Int)
+bestStraightFlush hand = 
+    let poss = straightFlushesFrom (sort hand)
+    in case poss of
+        [] -> Nothing
+        _ -> Just $ maxKey poss scoreHand
+
+-- Function that gets the ranks with a count of at least a given amount
+rankCountAtLeast :: [Card] -> Int -> [Rank]
+rankCountAtLeast cards minCount = map fst $ filter (\(_, c) -> c >= minCount) $ counterRank cards
+
+-- Function that gets the cards that have a rank that occur at least a given amount of times
+cardsWithRankCountAtLeast :: [Card] -> Int -> [[Card]]
+cardsWithRankCountAtLeast cards minCount = [take minCount (filter (\c -> rank c == currRank) cards) | currRank <- rankCountAtLeast cards minCount]
+
+-- Function that returns the best N of a kind and score if exist, and nothing otherwise
+bestNOfAKind :: [Card] -> Int -> Maybe (Hand, Int)
+bestNOfAKind cards n = 
+    case cardsWithRankCountAtLeast cards n of
+        [] -> Nothing
+        xs -> let choice = fst $ maxKey xs (rank . head)
+                in Just (choice, scoreHand choice)
+
+-- Function that returns the best full house and score if exist, and nothing otherwise
+bestFullHouse :: [Card] -> Maybe (Hand, Int)
+bestFullHouse cards =
     let
-        outputLength = min 5 (length xs)
-        allCombinations = combinations xs outputLength
-        maxScore = maximum $ map scoreHand allCombinations
-        maxHands = filter (\c -> scoreHand c == maxScore) allCombinations
-        choice = head maxHands
-    in case bestHandType choice of
-        HighCard ->
-            let largest = maximum $ map maximum maxHands
-            in head $ filter (\h -> maximum h == largest) maxHands
-        _ -> choice
+        triples = cardsWithRankCountAtLeast cards 3
+        pairs = cardsWithRankCountAtLeast cards 2
+    in case (triples, pairs) of
+        (_:_, _:_) -> let 
+            tripleChoice = fst $ maxKey triples (rank . head)
+            pairChoice = fst $ maxKey pairs (rank . head)
+            choice = tripleChoice ++ pairChoice
+            in Just (choice, scoreHand choice)
+        _ -> Nothing
+
+-- Function that returns the best straights and score if exist, and nothing otherwise
+bestStraights :: [Card] -> Maybe (Hand, Int)
+bestStraights cards =
+    case straightsFrom cards of
+        [] -> Nothing
+        xs -> let choice = fst $ maxKey xs scoreHand
+                in Just (choice, scoreHand choice)
+
+-- Function that returns the best two pairs and score if exist, and nothing otherwise
+bestTwoPair :: [Card] -> Maybe (Hand, Int)
+bestTwoPair cards
+    | length poss < 2 = Nothing
+    | otherwise = let 
+        sorted = sortBy (comparing (rank . head)) poss
+        choice = concat $ take 2 (reverse sorted)
+                    in Just (choice, scoreHand choice)
+    where poss = cardsWithRankCountAtLeast cards 2
+
+bestHandAndScoreFrom :: [Card] -> (Hand, Int)
+bestHandAndScoreFrom cards = 
+    let
+        outputLength = min 5 (length cards)
+        allCombinations = combinations cards outputLength
+    in
+        maxKey allCombinations scoreHand
+
+-- Function that returns the best flush and score if exist, and nothing otherwise
+bestFlushes :: [Card] -> Maybe (Hand, Int)
+bestFlushes cards =
+    let poss = [bestHandAndScoreFrom xs | s <- allSuits, let xs = filter (\c -> suit c == s) cards, length xs >= 5]
+    in case poss of
+        [] -> Nothing
+        _ -> Just (swap $ maximum (map swap poss))
+
+-- Main Function for Exercise 5
+highestScoringHand :: [Card] -> Hand
+highestScoringHand hand = 
+    let options = [bestRoyalFlush hand
+                  ,bestStraightFlush hand
+                  ,bestNOfAKind hand 4
+                  ,bestFullHouse hand
+                  ,bestFlushes hand
+                  ,bestStraights hand
+                  ,bestNOfAKind hand 3
+                  ,bestTwoPair hand
+                  ,bestNOfAKind hand 2
+                  ,bestNOfAKind hand 1]
+        actualOptions = catMaybes options
+    in snd $ maximum (map swap actualOptions)
 
 --------------------------------------------------------------------------------
 -- Part 5: implement an AI for maximising score across 3 hands and 3 discards
@@ -229,9 +359,9 @@ evaluateCard :: Hand -> Card -> Float
 evaluateCard hand card =
     let
         countRankComponent = 2 * fromIntegral (numOccurrencesRank hand (rank card))
-        countSuitComponent =  1 * fromIntegral (numOccurrencesSuit hand (suit card))
+        countSuitComponent =  6 * fromIntegral (numOccurrencesSuit hand (suit card))
         cardValue = 0.25 * fromIntegral (fromEnum $ rank card)
-        consecutiveComponent = 2 * fromIntegral (numConsecutive hand card)
+        consecutiveComponent = 1 * fromIntegral (numConsecutive hand card)
     in
         countSuitComponent + countRankComponent + cardValue + consecutiveComponent
 
@@ -248,6 +378,6 @@ numDiscards moveHistory = 3 - length (filter isDiscard moveHistory)
 -- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
 myAI moveHistory cards
-    | numDiscards moveHistory > 0 && best < Straight = Move Discard $ take 5 (sortBy (comparing $ evaluateCard cards) cards)
+    | numDiscards moveHistory > 0 && bestScore < 200 = Move Discard $ take 5 (sortBy (comparing $ evaluateCard cards) cards)
     | otherwise = Move Play $ highestScoringHand cards
-    where best = bestHandTypeFromHand cards
+    where bestScore = scoreHand $ highestScoringHand cards
