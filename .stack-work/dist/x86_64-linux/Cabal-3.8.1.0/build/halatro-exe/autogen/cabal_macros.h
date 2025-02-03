@@ -193,7 +193,7 @@
 #endif /* MIN_TOOL_VERSION_strip */
 
 #ifndef CURRENT_COMPONENT_ID
-#define CURRENT_COMPONENT_ID "halatro-0.1.0.0-GvFMOgWUb2xAKpigrru12c-halatro-exe"
+#define CURRENT_COMPONENT_ID "halatro-0.1.0.0-I1LWJRjZ3wo1vzBq0vB9NL-halatro-exe"
 #endif /* CURRENT_COMPONENT_ID */
 #ifndef CURRENT_PACKAGE_VERSION
 #define CURRENT_PACKAGE_VERSION "0.1.0.0"

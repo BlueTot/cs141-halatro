@@ -1,10 +1,9 @@
 module CourseworkOne where
 
--- import Halatro.Constants
 import Halatro.Types
 import Halatro.Constants ( rankScore, handTypeValues )
 import Data.Set (toList, fromList)
-import Data.List (sort, (\\), sortBy)
+import Data.List (sort, (\\), sortBy, elemIndex)
 import Data.Ord (comparing)
 
 --------------------------------------------------------------------------------
@@ -16,7 +15,7 @@ numOccurrencesRank hand cardRank = length $ filter (\(Card r _) -> r == cardRank
 
 -- Function to count the number of occurrences of a given suit in a hand
 numOccurrencesSuit :: Hand -> Suit -> Int
-numOccurrencesSuit hand cardSuit = length $ filter(\(Card _ s) -> s == cardSuit) hand
+numOccurrencesSuit hand cardSuit = length $ filter (\(Card _ s) -> s == cardSuit) hand
 
 -- Function to count the occurrences of each rank in a hand
 countRanks :: Hand -> [Int]
@@ -165,14 +164,14 @@ combinations xs k = removeDuplicates [x : y | x <- xs, y <- combinations (xs \\ 
 highestScoringHand :: [Card] -> Hand
 highestScoringHand [] = []
 highestScoringHand xs =
-    let 
+    let
         outputLength = min 5 (length xs)
         allCombinations = combinations xs outputLength
         maxScore = maximum $ map scoreHand allCombinations
         maxHands = filter (\c -> scoreHand c == maxScore) allCombinations
         choice = head maxHands
     in case bestHandType choice of
-        HighCard -> 
+        HighCard ->
             let largest = maximum $ map maximum maxHands
             in head $ filter (\h -> maximum h == largest) maxHands
         _ -> choice
@@ -200,26 +199,41 @@ orderedRanks hand = sort $ toList $ fromList $ ranks hand
 numAbove :: [Rank] -> Int
 numAbove [] = 0
 numAbove (x:xs) = case xs of
-    [] -> 1
-    (y:_) -> case abs(fromEnum y - fromEnum x) of
+    [] -> 0
+    (y:_) -> case abs (fromEnum y - fromEnum x) of
                 1 -> 1 + numAbove xs
-                _ -> 1
+                _ -> 0
 
+-- Function to get number of consecutive elements above and below an index (inc. itself) in a list of ordered ranks
+numAboveBelow :: Int -> [Rank] -> Int
+numAboveBelow index sortedRanks = 
+    let
+        upper = drop index sortedRanks
+        lower = reverse $ take (index+1) sortedRanks
+    in
+        numAbove upper + numAbove lower + 1
+
+-- Function to get the number of consecutive ranks a card is part of in a hand of eight
 numConsecutive :: Hand -> Card -> Int
-numConsecutive hand card = 
+numConsecutive hand card =
     let
         sortedRanks = orderedRanks hand
-    in
+        cardRank = rank card
+        maybeIndex = elemIndex cardRank sortedRanks
+    in case maybeIndex of
+        Nothing -> 0
+        (Just i) -> numAboveBelow i sortedRanks
 
 -- Function to evaluate each card, the greater the value the better it is
 evaluateCard :: Hand -> Card -> Float
 evaluateCard hand card =
     let
-        countRankComponent = 2 * 2 * numOccurrencesRank hand (rank card)
-        countSuitComponent = 2 * numOccurrencesSuit hand (suit card)
+        countRankComponent = 2 * fromIntegral (numOccurrencesRank hand (rank card))
+        countSuitComponent =  1 * fromIntegral (numOccurrencesSuit hand (suit card))
         cardValue = 0.25 * fromIntegral (fromEnum $ rank card)
+        consecutiveComponent = 2 * fromIntegral (numConsecutive hand card)
     in
-        fromIntegral (countRankComponent + countSuitComponent) + cardValue
+        countSuitComponent + countRankComponent + cardValue + consecutiveComponent
 
 -- Function to check if a move is a discard
 isDiscard :: Move -> Bool

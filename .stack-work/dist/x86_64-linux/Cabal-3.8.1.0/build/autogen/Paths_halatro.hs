@@ -43,7 +43,7 @@ getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir :: 
 
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 bindir     = "/dcs/24/u5594153/year1/cs141/cs141-halatro/.stack-work/install/x86_64-linux/ec8a2f8bbd124ba0bf429c4f9e63e032f3fd0a1ad18b7002e1c8b57981691fa9/9.4.8/bin"
-libdir     = "/dcs/24/u5594153/year1/cs141/cs141-halatro/.stack-work/install/x86_64-linux/ec8a2f8bbd124ba0bf429c4f9e63e032f3fd0a1ad18b7002e1c8b57981691fa9/9.4.8/lib/x86_64-linux-ghc-9.4.8/halatro-0.1.0.0-KCnpH0I3HHpAKBhV6tB7aN"
+libdir     = "/dcs/24/u5594153/year1/cs141/cs141-halatro/.stack-work/install/x86_64-linux/ec8a2f8bbd124ba0bf429c4f9e63e032f3fd0a1ad18b7002e1c8b57981691fa9/9.4.8/lib/x86_64-linux-ghc-9.4.8/halatro-0.1.0.0-GH7DS7S3K2vH63bfrLGgaf"
 dynlibdir  = "/dcs/24/u5594153/year1/cs141/cs141-halatro/.stack-work/install/x86_64-linux/ec8a2f8bbd124ba0bf429c4f9e63e032f3fd0a1ad18b7002e1c8b57981691fa9/9.4.8/lib/x86_64-linux-ghc-9.4.8"
 datadir    = "/dcs/24/u5594153/year1/cs141/cs141-halatro/.stack-work/install/x86_64-linux/ec8a2f8bbd124ba0bf429c4f9e63e032f3fd0a1ad18b7002e1c8b57981691fa9/9.4.8/share/x86_64-linux-ghc-9.4.8/halatro-0.1.0.0"
 libexecdir = "/dcs/24/u5594153/year1/cs141/cs141-halatro/.stack-work/install/x86_64-linux/ec8a2f8bbd124ba0bf429c4f9e63e032f3fd0a1ad18b7002e1c8b57981691fa9/9.4.8/libexec/x86_64-linux-ghc-9.4.8/halatro-0.1.0.0"
