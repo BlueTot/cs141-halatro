@@ -42,21 +42,14 @@ uniqueRanks hand = toList $ fromList (ranks hand)
 -- Function to check if a hand is ascending
 isAscending :: Hand -> Bool
 isAscending hand =
-    let
-        scores = sort $ map fromEnum $ ranks hand
-    in
-        case scores of
-            [2, 3, 4, 5, 11] -> True
-            _ -> and [b - a == 1 | (a, b) <- zip scores (tail scores)]
+    let scores = sort $ map fromEnum $ ranks hand
+    in and [b - a == 1 | (a, b) <- zip scores (tail scores)]
 
 -- Function to check if a hand is straight
 isStraight :: Hand -> Bool
 isStraight hand =
-    let
-        handRanks = sort $ ranks hand
-    in
-        length hand == 5 && (handRanks == [Two, Three, Four, Five, Ace] ||
-        handRanks == [Ten, Jack, Queen, King, Ace] || isAscending hand)
+    let handRanks = sort $ ranks hand
+    in length hand == 5 && (handRanks == [Two, Three, Four, Five, Ace] || isAscending hand)
 
 -- Function to check if a hand is a high card
 isHighCard :: Hand -> Bool
@@ -263,15 +256,19 @@ bestNOfAKind cards n =
 bestFullHouse :: [Card] -> Maybe (Hand, Int)
 bestFullHouse cards =
     let
-        triples = cardsWithRankCount cards 3
-        pairs = cardsWithRankCount cards 2
-    in case (triples, pairs) of
-        (_:_, _:_) -> let 
-            tripleChoice = fst $ maxKey triples (rank . head)
-            pairChoice = fst $ maxKey pairs (rank . head)
-            choice = tripleChoice ++ pairChoice
-            in Just (choice, scoreHand choice)
-        _ -> Nothing
+        triples = cardsWithRankCountAtLeast cards 3
+        pairs = cardsWithRankCountAtLeast cards 2
+    in case triples of
+        [] -> Nothing
+        _ -> let
+                tripleChoice = fst $ maxKey triples (rank.head)
+                validPairs = filter (\xs -> rank (head xs) /= rank (head tripleChoice)) pairs
+            in case validPairs of
+                [] -> Nothing
+                _ -> let 
+                        pairChoice = fst $ maxKey validPairs (rank.head)
+                        choice = tripleChoice ++ pairChoice
+                    in Just (choice, scoreHand choice)
 
 -- Function to remove duplicate ranked cards from a hand of cards
 uniqueRankHand :: [Card] -> [Card]
