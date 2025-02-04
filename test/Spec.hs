@@ -295,7 +295,17 @@ testPartFour =
                 (scoreHand (highestScoringHand h) >= scoreHand (highestScoringHand h')),
           testCase
             "Chooses an empty selection when the hand is empty"
-            $ highestScoringHand [] @=? []
+            $ highestScoringHand [] @=? [],
+          testProperty
+            "Correctness"
+            $ withMaxSuccess 1000 $ forAll (listOf1 arbitrary `suchThat` (\h -> length h <= 8))
+            $ \hand -> 
+              let
+                a = highestScoringHand hand
+                b = whichCardsScore $ highestScoringHand' hand
+              in counterexample
+            ("The right answer was " ++ (printShortHand b) ++ "you got " ++ (printShortHand a) ++ "the scores are " ++ show (scoreHand b) ++ " to " ++ show (scoreHand a))
+            (scoreHand a == scoreHand b)
         ]
     ]
 

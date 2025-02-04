@@ -162,21 +162,21 @@ combinations :: Ord a => [a] -> Int -> [[a]]
 combinations _ 0 = [[]]
 combinations xs k = removeDuplicates [x : y | x <- xs, y <- combinations (xs \\ [x]) (k-1), isLessThanStarting y x]
 
--- -- -- Main function for Exercise 5
--- highestScoringHand :: [Card] -> Hand
--- highestScoringHand [] = []
--- highestScoringHand xs =
---     let
---         outputLength = min 5 (length xs)
---         allCombinations = combinations xs outputLength
---         maxScore = maximum $ map scoreHand allCombinations
---         maxHands = filter (\c -> scoreHand c == maxScore) allCombinations
---         choice = head maxHands
---     in case bestHandType choice of
---         HighCard ->
---             let largest = maximum $ map maximum maxHands
---             in head $ filter (\h -> maximum h == largest) maxHands
---         _ -> choice
+-- -- Main function for Exercise 5
+highestScoringHand' :: [Card] -> Hand
+highestScoringHand' [] = []
+highestScoringHand' xs =
+    let
+        outputLength = min 5 (length xs)
+        allCombinations = combinations xs outputLength
+        maxScore = maximum $ map scoreHand allCombinations
+        maxHands = filter (\c -> scoreHand c == maxScore) allCombinations
+        choice = head maxHands
+    in case bestHandType choice of
+        HighCard ->
+            let largest = maximum $ map maximum maxHands
+            in head $ filter (\h -> maximum h == largest) maxHands
+        _ -> choice
 
 -- List of all of the suits
 allSuits :: [Suit]
@@ -202,17 +202,31 @@ bestRoyalFlush hand =
 -- Function to get straights from a list of cards
 straightsFrom :: [Card] -> [Hand]
 straightsFrom [] = []
-straightsFrom (_:xs)
+straightsFrom xs
     | l < 5 = []
     | otherwise = let curr = take 5 xs 
         in if isStraight curr
-            then curr : straightsFrom xs
-            else straightsFrom xs
+            then curr : straightsFrom (tail xs)
+            else straightsFrom (tail xs)
     where l = length xs
+
+-- Constant for the special straight hand that needs to be considered
+specialStraight :: [Rank]
+specialStraight = [Two, Three, Four, Five, Ace]
+
+-- Function to get all straights from a list of cards
+allStraightsFrom :: [Card] -> [Hand]
+allStraightsFrom cards = 
+    let
+        cardRanks = uniqueRanks cards
+    in
+        if containsList specialStraight cardRanks
+            then uniqueRankHand (filter (\c -> rank c `elem` specialStraight) cards) : straightsFrom cards
+            else straightsFrom cards
 
 -- Function to get straight flushes from a list of cards
 straightFlushesFrom :: [Card] -> [Hand]
-straightFlushesFrom cards = concat [straightsFrom $ filter (\c -> suit c == s) cards | s <- allSuits]
+straightFlushesFrom cards = concat [allStraightsFrom $ filter (\c -> suit c == s) cards | s <- allSuits]
 
 -- Function to get the maximum key and its score from a list of keys and a scoring function
 maxKey :: (Ord a, Ord b) => [a] -> (a -> b) -> (a, b)
@@ -221,10 +235,9 @@ maxKey xs f = swap $ maximum [(f x, x) | x <- xs]
 -- Function that returns the best straight flush and score if exist, and nothing otherwise
 bestStraightFlush :: [Card] -> Maybe (Hand, Int)
 bestStraightFlush hand = 
-    let poss = straightFlushesFrom (sort hand)
-    in case poss of
+    case straightFlushesFrom (sort hand) of
         [] -> Nothing
-        _ -> Just $ maxKey poss scoreHand
+        xs -> Just $ maxKey xs scoreHand
 
 -- Function that gets the ranks with a count of at least a given amount
 rankCountAtLeast :: [Card] -> Int -> [Rank]
@@ -260,10 +273,14 @@ bestFullHouse cards =
             in Just (choice, scoreHand choice)
         _ -> Nothing
 
+-- Function to remove duplicate ranked cards from a hand of cards
+uniqueRankHand :: [Card] -> [Card]
+uniqueRankHand cards = [head poss | r <- [(minBound :: Rank) ..], let poss = filter (\c -> rank c == r) cards, not $ null poss]
+
 -- Function that returns the best straights and score if exist, and nothing otherwise
 bestStraights :: [Card] -> Maybe (Hand, Int)
 bestStraights cards =
-    case straightsFrom cards of
+    case allStraightsFrom $ sort $ uniqueRankHand cards of
         [] -> Nothing
         xs -> let choice = fst $ maxKey xs scoreHand
                 in Just (choice, scoreHand choice)
@@ -363,10 +380,10 @@ numConsecutive hand card =
 evaluateCard :: Hand -> Card -> Float
 evaluateCard hand card =
     let
-        countRankComponent = 2 * fromIntegral (numOccurrencesRank hand (rank card))
-        countSuitComponent =  6 * fromIntegral (numOccurrencesSuit hand (suit card))
+        countRankComponent = 4 * fromIntegral (numOccurrencesRank hand (rank card))
+        countSuitComponent =  2 * fromIntegral (numOccurrencesSuit hand (suit card))
         cardValue = 0.25 * fromIntegral (fromEnum $ rank card)
-        consecutiveComponent = 1 * fromIntegral (numConsecutive hand card)
+        consecutiveComponent = 0 * fromIntegral (numConsecutive hand card)
     in
         countSuitComponent + countRankComponent + cardValue + consecutiveComponent
 
