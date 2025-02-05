@@ -298,7 +298,7 @@ testPartFour =
             $ highestScoringHand [] @=? [],
           testProperty
             "Correctness"
-            $ withMaxSuccess 1000 $ forAll (listOf1 arbitrary `suchThat` (\h -> length h <= 8))
+            $ withMaxSuccess 10000 $ forAll (listOf1 arbitrary `suchThat` (\h -> length h <= 8))
             $ \hand -> 
               let
                 a = highestScoringHand hand

@@ -102,6 +102,10 @@ counterRank hand = [(r, numOccurrencesRank hand r) | r <- [Two ..]]
 rankWithCount :: Hand -> Int -> [Rank]
 rankWithCount hand count = map fst $ filter (\(_, c) -> c == count) $ counterRank hand
 
+-- Function to get the ranks with at least a certain count in the hand
+rankWithCountAtLeast :: Hand -> Int -> [Rank]
+rankWithCountAtLeast hand count = map fst $ filter (\(_, c) -> c >= count) $ counterRank hand
+
 -- Function to get the score of the highest rank in the hand
 highestRankScore :: Hand -> Int
 highestRankScore hand = maximum (map rankScore (ranks hand))
@@ -112,7 +116,7 @@ whichCardsScore hand =
     let
         pairs = rankWithCount hand 2
         triplets = rankWithCount hand 3
-        quads = rankWithCount hand 4
+        quads = rankWithCountAtLeast hand 4
     in case bestHandType hand of
         None -> []
         HighCard -> [maximum hand]
@@ -122,7 +126,7 @@ whichCardsScore hand =
         Straight -> hand
         Flush -> hand
         FullHouse -> hand
-        FourOfAKind -> filter (\(Card r _) -> r `elem` quads) hand
+        FourOfAKind -> take 4 $ filter (\(Card r _) -> r `elem` quads) hand
         StraightFlush -> hand
         RoyalFlush -> hand
 
@@ -310,6 +314,7 @@ bestFlushes cards =
 
 -- Main Function for Exercise 5
 highestScoringHand :: [Card] -> Hand
+-- highestScoringHand = highestScoringHand'
 highestScoringHand [] = []
 highestScoringHand hand = 
     let options = [bestRoyalFlush hand
@@ -323,7 +328,9 @@ highestScoringHand hand =
                   ,bestNOfAKind hand 2
                   ,bestNOfAKind hand 1]
         actualOptions = catMaybes options
-    in snd $ maximum (map swap actualOptions)
+        scoringCards = snd $ maximum (map swap actualOptions)
+    in scoringCards ++ take (5 - length scoringCards) (hand \\ scoringCards)
+    -- in snd $ maximum (map swap actualOptions)
 
 --------------------------------------------------------------------------------
 -- Part 5: implement an AI for maximising score across 3 hands and 3 discards
@@ -396,8 +403,8 @@ numDiscards moveHistory = 3 - length (filter isDiscard moveHistory)
 
 -- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
-myAI moveHistory cards
-    | numDiscards moveHistory > 0 && bestScore < 200 = Move Discard $ take 5 (sortBy (comparing $ evaluateCard cards) cards)
-    | otherwise = Move Play $ highestScoringHand cards
-    where bestScore = scoreHand $ highestScoringHand cards
--- myAI = sensibleAI
+-- myAI moveHistory cards
+--     | numDiscards moveHistory > 0 && bestScore < 200 = Move Discard $ take 5 (sortBy (comparing $ evaluateCard cards) cards)
+--     | otherwise = Move Play $ highestScoringHand cards
+--     where bestScore = scoreHand $ highestScoringHand cards
+myAI = sensibleAI
