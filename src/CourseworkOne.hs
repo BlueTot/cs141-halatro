@@ -382,15 +382,15 @@ numConsecutive hand card =
 
 -- Function to evaluate each card, the greater the value the better it is
 evaluateCard :: Hand -> Card -> Float
-evaluateCard hand card =
-    let
-        countRankComponent = 4 * fromIntegral (numOccurrencesRank hand (rank card))
-        countSuitComponent =  4 * fromIntegral (numOccurrencesSuit hand (suit card))
-        cardValue = 2 * fromIntegral (fromEnum $ rank card)
-        consecutiveComponent = 2 * fromIntegral (numConsecutive hand card)
-    in
-        countRankComponent + countSuitComponent + cardValue + consecutiveComponent
-        -- countSuitComponent + countRankComponent + cardValue + consecutiveComponent
+evaluateCard hand card = fromIntegral (numOccurrencesSuit hand (suit card))
+    -- let
+    --     countRankComponent = 4 * fromIntegral (numOccurrencesRank hand (rank card))
+    --     countSuitComponent =  11 * fromIntegral (numOccurrencesSuit hand (suit card))
+    --     cardValue = 2 * fromIntegral (fromEnum $ rank card)
+    --     consecutiveComponent = 2 * fromIntegral (numConsecutive hand card)
+    -- in
+    --     fromIntegral (numOccurrencesSuit hand (suit card))
+        -- countRankComponent + countSuitComponent + cardValue + consecutiveComponent
 
 -- Function to check if a move is a discard
 isDiscard :: Move -> Bool
@@ -405,10 +405,11 @@ numDiscards moveHistory = 3 - length (filter isDiscard moveHistory)
 -- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
 myAI moveHistory cards
-    | numDiscards moveHistory > 0 && best < Straight = Move Discard $ take 5 (sortBy (comparing $ evaluateCard cards) cards)
+    | numDiscards moveHistory > 0 && best < ThreeOfAKind = Move Discard $ take 5 (sortBy (comparing $ evaluateCard cards) cards)
     | otherwise = let 
                     choice = whichCardsScore $ highestScoringHand cards
                     orderedCards = sortBy (comparing $ evaluateCard cards) cards
                     in Move Play (choice ++ take (5 - length choice) orderedCards)
-    where best = bestHandType $ highestScoringHand cards
+    where 
+        best = bestHandType $ highestScoringHand cards
 -- myAI = sensibleAI
