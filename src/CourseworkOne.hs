@@ -328,9 +328,9 @@ highestScoringHand hand =
                   ,bestNOfAKind hand 2
                   ,bestNOfAKind hand 1]
         actualOptions = catMaybes options
-    --     scoringCards = snd $ maximum (map swap actualOptions)
-    -- in scoringCards ++ take (5 - length scoringCards) (hand \\ scoringCards)
-    in snd $ maximum (map swap actualOptions)
+        scoringCards = snd $ maximum (map swap actualOptions)
+    in scoringCards ++ take (5 - length scoringCards) (sort $ hand \\ scoringCards)
+    -- in snd $ maximum (map swap actualOptions)
 
 --------------------------------------------------------------------------------
 -- Part 5: implement an AI for maximising score across 3 hands and 3 discards
