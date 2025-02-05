@@ -298,10 +298,10 @@ testPartFour =
             $ highestScoringHand [] @=? [],
           testProperty
             "Correctness"
-            $ withMaxSuccess 10000 $ forAll (listOf1 arbitrary `suchThat` (\h -> length h <= 8))
+            $ withMaxSuccess 100000 $ forAll (listOf1 arbitrary `suchThat` (\h -> length h <= 8))
             $ \hand -> 
               let
-                a = highestScoringHand hand
+                a = whichCardsScore $ highestScoringHand hand
                 b = whichCardsScore $ highestScoringHand' hand
               in counterexample
             ("The right answer was " ++ (printShortHand b) ++ "you got " ++ (printShortHand a) ++ "the scores are " ++ show (scoreHand b) ++ " to " ++ show (scoreHand a))

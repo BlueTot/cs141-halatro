@@ -328,9 +328,9 @@ highestScoringHand hand =
                   ,bestNOfAKind hand 2
                   ,bestNOfAKind hand 1]
         actualOptions = catMaybes options
-        scoringCards = snd $ maximum (map swap actualOptions)
-    in scoringCards ++ take (5 - length scoringCards) (hand \\ scoringCards)
-    -- in snd $ maximum (map swap actualOptions)
+    --     scoringCards = snd $ maximum (map swap actualOptions)
+    -- in scoringCards ++ take (5 - length scoringCards) (hand \\ scoringCards)
+    in snd $ maximum (map swap actualOptions)
 
 --------------------------------------------------------------------------------
 -- Part 5: implement an AI for maximising score across 3 hands and 3 discards
@@ -403,8 +403,11 @@ numDiscards moveHistory = 3 - length (filter isDiscard moveHistory)
 
 -- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
--- myAI moveHistory cards
---     | numDiscards moveHistory > 0 && bestScore < 200 = Move Discard $ take 5 (sortBy (comparing $ evaluateCard cards) cards)
---     | otherwise = Move Play $ highestScoringHand cards
---     where bestScore = scoreHand $ highestScoringHand cards
-myAI = sensibleAI
+myAI moveHistory cards
+    | numDiscards moveHistory > 0 && best < Straight = Move Discard $ take 5 (sortBy (comparing $ evaluateCard cards) cards)
+    | otherwise = let 
+                    choice = whichCardsScore $ highestScoringHand cards
+                    orderedCards = sortBy (comparing $ evaluateCard cards) cards
+                    in Move Play (choice ++ take (5 - length choice) orderedCards)
+    where best = bestHandType $ highestScoringHand cards
+-- myAI = sensibleAI
