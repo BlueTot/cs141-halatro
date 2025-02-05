@@ -385,11 +385,12 @@ evaluateCard :: Hand -> Card -> Float
 evaluateCard hand card =
     let
         countRankComponent = 4 * fromIntegral (numOccurrencesRank hand (rank card))
-        countSuitComponent =  2 * fromIntegral (numOccurrencesSuit hand (suit card))
-        cardValue = 0.25 * fromIntegral (fromEnum $ rank card)
-        consecutiveComponent = 0 * fromIntegral (numConsecutive hand card)
+        countSuitComponent =  4 * fromIntegral (numOccurrencesSuit hand (suit card))
+        cardValue = 2 * fromIntegral (fromEnum $ rank card)
+        consecutiveComponent = 2 * fromIntegral (numConsecutive hand card)
     in
-        countSuitComponent + countRankComponent + cardValue + consecutiveComponent
+        countRankComponent + countSuitComponent + cardValue + consecutiveComponent
+        -- countSuitComponent + countRankComponent + cardValue + consecutiveComponent
 
 -- Function to check if a move is a discard
 isDiscard :: Move -> Bool
