@@ -380,20 +380,24 @@ numConsecutive hand card =
         Nothing -> 0
         (Just i) -> numAboveBelow i sortedRanks
 
+-- Weights we have tried: R:4, S:50, V:2, C:1, RS:25, RR:0
+
 -- Function to evaluate each card, the greater the value the better it is
 evaluateCard :: Hand -> [Card] -> Card -> Float
 evaluateCard hand remainingCards card = 
     let
-        countRankComponent = 4 * fromIntegral (numOccurrencesRank hand (rank card))
+        countRankComponent = 2 * fromIntegral (numOccurrencesRank hand (rank card))
         countSuitComponent =  50 * fromIntegral (numOccurrencesSuit hand (suit card))
-        cardValue = 2 * fromIntegral (fromEnum $ rank card)
-        consecutiveComponent = 1 * fromIntegral (numConsecutive hand card)
+        cardValue = 3 * fromIntegral (fromEnum $ rank card)
+        consecutiveComponent = 0.5 * fromIntegral (numConsecutive hand card)
         numInDeckWithSameSuit = length (filter (\c -> suit c == suit card) remainingCards)
-        remainingSuitComponent = 25 * fromIntegral numInDeckWithSameSuit
+        remainingSuitComponent = 0 * fromIntegral numInDeckWithSameSuit
+        numInDeckWithSameRank = length (filter (\c -> rank c == rank card) remainingCards)
+        remainingRankComponent = 0 * fromIntegral numInDeckWithSameRank
     in
-        -- fromIntegral (numOccurrencesSuit hand (suit card))
-        countRankComponent + 
-        countSuitComponent + 
+        countRankComponent +
+        remainingRankComponent +
+        countSuitComponent +
         remainingSuitComponent + 
         cardValue + 
         consecutiveComponent
@@ -414,6 +418,17 @@ sortByEvaluation moveHistory cards =
     let remainingCards = originalDeck \\ usedCards moveHistory
     in sortBy (comparing $ evaluateCard cards remainingCards) cards
 
+-- Function to get the maximum partial-flush length in the hand
+maxPartialFlush :: [Card] -> Int
+maxPartialFlush cards = maximum [numOccurrencesSuit cards s | s <- [(minBound :: Suit) .. ]]
+
+-- Function to determine how many cards to discard
+numToDiscard :: [Card] -> Int
+numToDiscard cards
+    | n >= 4 = 8 - n
+    | otherwise = 5
+    where n = maxPartialFlush cards
+
 -- Function to get used cards from the move history
 usedCards :: [Move] -> [Card]
 usedCards = concatMap getUsedCards
@@ -431,7 +446,7 @@ originalDeck = [Card r s | r <- [(minBound :: Rank) ..], s <- [(minBound :: Suit
 myAI :: [Move] -> [Card] -> Move
 myAI moveHistory cards
     | numDiscards moveHistory > 0 && best < ThreeOfAKind = 
-        Move Discard $ take 5 $ sortByEvaluation moveHistory cards
+        Move Discard $ take (numToDiscard cards) $ sortByEvaluation moveHistory cards
     | otherwise = let 
                     choice = whichCardsScore $ highestScoringHand cards
                     orderedCards = sortByEvaluation moveHistory (cards \\ choice)
