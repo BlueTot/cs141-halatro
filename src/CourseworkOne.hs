@@ -382,15 +382,15 @@ numConsecutive hand card =
 
 -- Function to evaluate each card, the greater the value the better it is
 evaluateCard :: Hand -> Card -> Float
-evaluateCard hand card = fromIntegral (numOccurrencesSuit hand (suit card))
-    -- let
-    --     countRankComponent = 4 * fromIntegral (numOccurrencesRank hand (rank card))
-    --     countSuitComponent =  11 * fromIntegral (numOccurrencesSuit hand (suit card))
-    --     cardValue = 2 * fromIntegral (fromEnum $ rank card)
-    --     consecutiveComponent = 2 * fromIntegral (numConsecutive hand card)
-    -- in
-    --     fromIntegral (numOccurrencesSuit hand (suit card))
-        -- countRankComponent + countSuitComponent + cardValue + consecutiveComponent
+evaluateCard hand card = 
+    let
+        countRankComponent = 4 * fromIntegral (numOccurrencesRank hand (rank card))
+        countSuitComponent =  4 * fromIntegral (numOccurrencesSuit hand (suit card))
+        cardValue = 2 * fromIntegral (fromEnum $ rank card)
+        consecutiveComponent = 2 * fromIntegral (numConsecutive hand card)
+    in
+        -- fromIntegral (numOccurrencesSuit hand (suit card))
+        countRankComponent + countSuitComponent + cardValue + consecutiveComponent
 
 -- Function to check if a move is a discard
 isDiscard :: Move -> Bool
@@ -402,13 +402,17 @@ isDiscard move = case move of
 numDiscards :: [Move] -> Int
 numDiscards moveHistory = 3 - length (filter isDiscard moveHistory)
 
+-- Function to sort the hand of cards by the evaluation function
+sortByEvaluation :: [Card] -> [Card]
+sortByEvaluation cards = sortBy (comparing $ evaluateCard cards) cards
+
 -- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
 myAI moveHistory cards
-    | numDiscards moveHistory > 0 && best < ThreeOfAKind = Move Discard $ take 5 (sortBy (comparing $ evaluateCard cards) cards)
+    | numDiscards moveHistory > 0 && best < ThreeOfAKind = Move Discard $ take 5 $ sortByEvaluation cards
     | otherwise = let 
                     choice = whichCardsScore $ highestScoringHand cards
-                    orderedCards = sortBy (comparing $ evaluateCard cards) cards
+                    orderedCards = sortByEvaluation (cards \\ choice)
                     in Move Play (choice ++ take (5 - length choice) orderedCards)
     where 
         best = bestHandType $ highestScoringHand cards
