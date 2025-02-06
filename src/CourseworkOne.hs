@@ -391,7 +391,7 @@ evaluateCard hand remainingCards card =
         cardValue = 3 * fromIntegral (fromEnum $ rank card)
         consecutiveComponent = 0.5 * fromIntegral (numConsecutive hand card)
         numInDeckWithSameSuit = length (filter (\c -> suit c == suit card) remainingCards)
-        remainingSuitComponent = 0 * fromIntegral numInDeckWithSameSuit
+        remainingSuitComponent = 25 * fromIntegral numInDeckWithSameSuit
         numInDeckWithSameRank = length (filter (\c -> rank c == rank card) remainingCards)
         remainingRankComponent = 0 * fromIntegral numInDeckWithSameRank
     in
@@ -428,6 +428,14 @@ numToDiscard cards
     | n >= 4 = 8 - n
     | otherwise = 5
     where n = maxPartialFlush cards
+
+numToDiscardWhenPlay :: [Card] -> [Card] -> Int
+numToDiscardWhenPlay cards choice
+    | n >= 4 = 4 - l
+    | otherwise = 5 - l
+    where
+        n = maxPartialFlush cards
+        l = length choice
 
 -- Function to get used cards from the move history
 usedCards :: [Move] -> [Card]
