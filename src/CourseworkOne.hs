@@ -385,9 +385,9 @@ evaluateCard :: Hand -> Card -> Float
 evaluateCard hand card = 
     let
         countRankComponent = 4 * fromIntegral (numOccurrencesRank hand (rank card))
-        countSuitComponent =  4 * fromIntegral (numOccurrencesSuit hand (suit card))
+        countSuitComponent =  50 * fromIntegral (numOccurrencesSuit hand (suit card))
         cardValue = 2 * fromIntegral (fromEnum $ rank card)
-        consecutiveComponent = 2 * fromIntegral (numConsecutive hand card)
+        consecutiveComponent = 1 * fromIntegral (numConsecutive hand card)
     in
         -- fromIntegral (numOccurrencesSuit hand (suit card))
         countRankComponent + countSuitComponent + cardValue + consecutiveComponent
