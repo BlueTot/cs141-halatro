@@ -399,25 +399,16 @@ evaluateCard hand remainingCards card =
         -- initial variables we calculate
         numSuits = fromIntegral (numOccurrencesSuit hand (suit card))
         numCons = fromIntegral (numConsecutive hand card)
-        -- overallCardValue = fromIntegral $ sum (map (fromEnum . rank) $ filter (\c -> suit c == suit card) hand)
-        -- overallRemSuit = fromIntegral $ length (filter (\c -> suit c == suit card) remainingCards)
-        -- overallCons = fromIntegral $ sum (map (numConsecutive hand) hand)
 
         -- the actual things we use
-        countRankComponent = 2 * fromIntegral (numOccurrencesRank hand (rank card))
+        countRankComponent = 0 * fromIntegral (numOccurrencesRank hand (rank card))
         countSuitComponent =  11 * numSuits ** 2 + 25 * (20 ** (numSuits - 3.5))
         suitStrengthComponent = suitStrength hand remainingCards card
         cardValue = 1.5 * fromIntegral (fromEnum $ rank card)
         consecutiveComponent = 30 * (20 ** (numCons - 3.5))
-        -- numInDeckWithSameSuit = length (filter (\c -> suit c == suit card) remainingCards)
-        -- remainingSuitComponent = 0 * fromIntegral numInDeckWithSameSuit
-        -- numInDeckWithSameRank = length (filter (\c -> rank c == rank card) remainingCards)
-        -- remainingRankComponent = 0 * fromIntegral numInDeckWithSameRank
     in
         countRankComponent +
-        -- remainingRankComponent +
         countSuitComponent +
-        -- remainingSuitComponent + 
         cardValue + 
         consecutiveComponent +
         suitStrengthComponent
@@ -450,7 +441,7 @@ maxPartialStraight cards = maximum $ map (numConsecutive cards) cards
 -- Function to determine how many cards to discard
 numToDiscard :: [Card] -> Int
 numToDiscard cards
-    | flush >= 4 = 8 - flush
+    | flush >= 4 = 4
     | straight >= 4 = 8 - straight
     | otherwise = 5
     where 
@@ -458,13 +449,13 @@ numToDiscard cards
         straight = maxPartialStraight cards
 
 
-numToDiscardWhenPlay :: [Card] -> [Card] -> Int
-numToDiscardWhenPlay cards choice
-    | n >= 4 = 4 - l
-    | otherwise = 5 - l
-    where
-        n = maxPartialFlush cards
-        l = length choice
+-- numToDiscardWhenPlay :: [Card] -> [Card] -> Int
+-- numToDiscardWhenPlay cards choice
+--     | n >= 4 = 4 - l
+--     | otherwise = 5 - l
+--     where
+--         n = maxPartialFlush cards
+--         l = length choice
 
 -- Function to get used cards from the move history
 usedCards :: [Move] -> [Card]
@@ -482,7 +473,7 @@ originalDeck = [Card r s | r <- [(minBound :: Rank) ..], s <- [(minBound :: Suit
 -- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
 myAI moveHistory cards
-    | numDiscards moveHistory > 0 && best < ThreeOfAKind = 
+    | numDiscards moveHistory > 0 && best < Straight = 
         Move Discard $ take (numToDiscard cards) $ sortByEvaluation moveHistory cards
     | otherwise = let 
                     choice = whichCardsScore $ highestScoringHand cards
