@@ -382,25 +382,45 @@ numConsecutive hand card =
 
 -- Weights we have tried: R:4, S:50, V:2, C:1, RS:25, RR:0
 
+suitStrength :: Hand -> [Card] -> Card -> Float
+suitStrength hand remainingCards card = 
+    let
+        overallCardValue = fromIntegral $ sum (map (fromEnum . rank) $ filter (\c -> suit c == suit card) hand)
+        overallRemSuit = fromIntegral $ length (filter (\c -> suit c == suit card) remainingCards)
+        overallCons = fromIntegral $ sum (map (numConsecutive hand) hand)
+    in 
+        4 * (overallCardValue + overallRemSuit + overallCons + 2 * fromIntegral (fromEnum (suit card)))
+
+
 -- Function to evaluate each card, the greater the value the better it is
 evaluateCard :: Hand -> [Card] -> Card -> Float
 evaluateCard hand remainingCards card = 
     let
+        -- initial variables we calculate
+        numSuits = fromIntegral (numOccurrencesSuit hand (suit card))
+        numCons = fromIntegral (numConsecutive hand card)
+        -- overallCardValue = fromIntegral $ sum (map (fromEnum . rank) $ filter (\c -> suit c == suit card) hand)
+        -- overallRemSuit = fromIntegral $ length (filter (\c -> suit c == suit card) remainingCards)
+        -- overallCons = fromIntegral $ sum (map (numConsecutive hand) hand)
+
+        -- the actual things we use
         countRankComponent = 2 * fromIntegral (numOccurrencesRank hand (rank card))
-        countSuitComponent =  50 * fromIntegral (numOccurrencesSuit hand (suit card))
-        cardValue = 3 * fromIntegral (fromEnum $ rank card)
-        consecutiveComponent = 0.5 * fromIntegral (numConsecutive hand card)
-        numInDeckWithSameSuit = length (filter (\c -> suit c == suit card) remainingCards)
-        remainingSuitComponent = 25 * fromIntegral numInDeckWithSameSuit
-        numInDeckWithSameRank = length (filter (\c -> rank c == rank card) remainingCards)
-        remainingRankComponent = 0 * fromIntegral numInDeckWithSameRank
+        countSuitComponent =  11 * numSuits ** 2 + 25 * (20 ** (numSuits - 3.5))
+        suitStrengthComponent = suitStrength hand remainingCards card
+        cardValue = 1.5 * fromIntegral (fromEnum $ rank card)
+        consecutiveComponent = 30 * (20 ** (numCons - 3.5))
+        -- numInDeckWithSameSuit = length (filter (\c -> suit c == suit card) remainingCards)
+        -- remainingSuitComponent = 0 * fromIntegral numInDeckWithSameSuit
+        -- numInDeckWithSameRank = length (filter (\c -> rank c == rank card) remainingCards)
+        -- remainingRankComponent = 0 * fromIntegral numInDeckWithSameRank
     in
         countRankComponent +
-        remainingRankComponent +
+        -- remainingRankComponent +
         countSuitComponent +
-        remainingSuitComponent + 
+        -- remainingSuitComponent + 
         cardValue + 
-        consecutiveComponent
+        consecutiveComponent +
+        suitStrengthComponent
 
 -- Function to check if a move is a discard
 isDiscard :: Move -> Bool
@@ -422,12 +442,21 @@ sortByEvaluation moveHistory cards =
 maxPartialFlush :: [Card] -> Int
 maxPartialFlush cards = maximum [numOccurrencesSuit cards s | s <- [(minBound :: Suit) .. ]]
 
+-- Function to get the maximum partial straight length in the hand
+maxPartialStraight :: [Card] -> Int
+maxPartialStraight cards = maximum $ map (numConsecutive cards) cards
+
+
 -- Function to determine how many cards to discard
 numToDiscard :: [Card] -> Int
 numToDiscard cards
-    | n >= 4 = 8 - n
+    | flush >= 4 = 8 - flush
+    | straight >= 4 = 8 - straight
     | otherwise = 5
-    where n = maxPartialFlush cards
+    where 
+        flush = maxPartialFlush cards
+        straight = maxPartialStraight cards
+
 
 numToDiscardWhenPlay :: [Card] -> [Card] -> Int
 numToDiscardWhenPlay cards choice
