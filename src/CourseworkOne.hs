@@ -380,8 +380,7 @@ numConsecutive hand card =
         Nothing -> 0
         (Just i) -> numAboveBelow i sortedRanks
 
--- Weights we have tried: R:4, S:50, V:2, C:1, RS:25, RR:0
-
+-- Function to evaluate the overall strength of a suit
 suitStrength :: Hand -> [Card] -> Card -> Float
 suitStrength hand remainingCards card = 
     let
@@ -391,23 +390,38 @@ suitStrength hand remainingCards card =
     in 
         4 * (overallCardValue + overallRemSuit + overallCons + 2 * fromIntegral (fromEnum (suit card)))
 
+-- Piecewise function for suit evaluation calculation
+suitFormula :: Int -> Int
+suitFormula 0 = 0
+suitFormula 2 = 11
+-- suitFormula 3 = 104
+suitFormula 3 = 50
+suitFormula 4 = 287
+suitFormula _ = 0
+
+-- Piecewise function for straight evaluation calculation
+consFormula :: Int -> Int
+consFormula 0 = 0
+consFormula 1 = 0
+consFormula 2 = 0
+consFormula 3 = 6
+consFormula 4 = 134
+consFormula _ = 0
 
 -- Function to evaluate each card, the greater the value the better it is
 evaluateCard :: Hand -> [Card] -> Card -> Float
 evaluateCard hand remainingCards card = 
     let
         -- initial variables we calculate
-        numSuits = fromIntegral (numOccurrencesSuit hand (suit card))
-        numCons = fromIntegral (numConsecutive hand card)
+        numSuits = numOccurrencesSuit hand (suit card)
+        numCons = numConsecutive hand card
 
         -- the actual things we use
-        countRankComponent = 0 * fromIntegral (numOccurrencesRank hand (rank card))
-        countSuitComponent =  11 * numSuits ** 2 + 25 * (20 ** (numSuits - 3.5))
+        countSuitComponent = fromIntegral $ suitFormula numSuits
         suitStrengthComponent = suitStrength hand remainingCards card
         cardValue = 1.5 * fromIntegral (fromEnum $ rank card)
-        consecutiveComponent = 30 * (20 ** (numCons - 3.5))
+        consecutiveComponent = fromIntegral $ consFormula numCons
     in
-        countRankComponent +
         countSuitComponent +
         cardValue + 
         consecutiveComponent +
@@ -437,7 +451,6 @@ maxPartialFlush cards = maximum [numOccurrencesSuit cards s | s <- [(minBound ::
 maxPartialStraight :: [Card] -> Int
 maxPartialStraight cards = maximum $ map (numConsecutive cards) cards
 
-
 -- Function to determine how many cards to discard
 numToDiscard :: [Card] -> Int
 numToDiscard cards
@@ -447,15 +460,6 @@ numToDiscard cards
     where 
         flush = maxPartialFlush cards
         straight = maxPartialStraight cards
-
-
--- numToDiscardWhenPlay :: [Card] -> [Card] -> Int
--- numToDiscardWhenPlay cards choice
---     | n >= 4 = 4 - l
---     | otherwise = 5 - l
---     where
---         n = maxPartialFlush cards
---         l = length choice
 
 -- Function to get used cards from the move history
 usedCards :: [Move] -> [Card]
