@@ -66,7 +66,8 @@ testPartOne =
         let testCases =
               [ ( HighCard,
                   [[2 @ H, 3 @ D, 4 @ H, 5 @ H, 7 @ H]],
-                  [[2 @ H, 2 @ D, 3 @ H, 4 @ H, 5 @ H]]
+                  [[2 @ H, 2 @ D, 3 @ H, 4 @ H, 5 @ H],
+                   [2 @ H, 4 @ H, 6 @ H, 8 @ H, 10 @ H]]
                 ),
                 ( Pair,
                   [ [2 @ H, 2 @ D, 3 @ H, 4 @ H, 5 @ H],

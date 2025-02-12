@@ -23,17 +23,18 @@ numOccurrencesSuit hand cardSuit = length $ filter (\(Card _ s) -> s == cardSuit
 countRanks :: Hand -> [Int]
 countRanks hand = filter (> 0) [numOccurrencesRank hand r | r <- [Two ..]]
 
--- Check if there are at least k instances of a given occurrence or higher in the list of occurrences of a hand
+{-Check if there are at least k instances of a given occurrence or higher 
+    in the list of occurrences of a hand -}
 enoughRankCount :: Hand -> Int -> Int -> Bool
 enoughRankCount hand count target = length (filter (>=count) $ countRanks hand) == target
-
--- Function to get unique suites from a hand
-uniqueSuites :: Hand -> [Suit]
-uniqueSuites hand = toList $ fromList $ map (\(Card _ s) -> s) hand
 
 -- Function to get ranks from a hand
 ranks :: Hand -> [Rank]
 ranks = map (\(Card r _) -> r)
+
+-- Function to get unique suites from a hand
+uniqueSuites :: Hand -> [Suit]
+uniqueSuites hand = toList $ fromList $ map (\(Card _ s) -> s) hand
 
 -- Function to get unique ranks from a hand
 uniqueRanks :: Hand -> [Rank]
@@ -53,7 +54,11 @@ isStraight hand =
 
 -- Function to check if a hand is a high card
 isHighCard :: Hand -> Bool
-isHighCard hand = not (null hand) && not (isStraight hand) && length (uniqueRanks hand) == length hand
+isHighCard hand = 
+    not (null hand) && -- the hand is not empty
+    not (isStraight hand) && -- the hand is not straight
+    length (uniqueRanks hand) == length hand  && -- each rank occurs exactly once
+    length (uniqueSuites hand) > 1
 
 -- Function to check if a hand is flush
 isFlush :: Hand -> Bool
@@ -157,7 +162,9 @@ removeDuplicates xs = toList $ fromList xs
 -- Function to get all possible combinations of r items from n >= r items
 combinations :: Ord a => [a] -> Int -> [[a]]
 combinations _ 0 = [[]]
-combinations xs k = removeDuplicates [x : y | x <- xs, y <- combinations (xs \\ [x]) (k-1), isLessThanStarting y x]
+combinations xs k = removeDuplicates [x : y | x <- xs, 
+                    y <- combinations (xs \\ [x]) (k-1), 
+                    isLessThanStarting y x]
 
 -- -- Main function for Exercise 5
 highestScoringHand' :: [Card] -> Hand
@@ -394,7 +401,6 @@ suitStrength hand remainingCards card =
 suitFormula :: Int -> Int
 suitFormula 0 = 0
 suitFormula 2 = 11
--- suitFormula 3 = 104
 suitFormula 3 = 50
 suitFormula 4 = 287
 suitFormula _ = 0
