@@ -96,6 +96,7 @@ testPartOne =
                     [7 @ H, 8 @ H, 9 @ H, 10 @ H, J @ H]
                   ],
                   [[J @ H, Q @ D, K @ H, A @ H, 2 @ H],
+                   [Q @ H, K @ H, A @ H, 2 @ H, 3 @ H],
                   -- this is a custom test, made by me!
                   [7 @ H, 8 @ H, 9 @ H, Q @ H, A @ H]]
                 ),

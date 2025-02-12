@@ -1,55 +1,67 @@
 module CourseworkOne where
 
 import Halatro.Types
-import Halatro.Constants ( rankScore, handTypeValues )
-import Data.Set (toList, fromList)
-import Data.List (sort, (\\), sortBy, elemIndex)
-import Data.Ord (comparing)
-import Data.Tuple (swap)
-import Data.Maybe (catMaybes)
+import Halatro.Constants
+import qualified Data.Set as Set
+import qualified Data.List as List
+import qualified Data.Ord as Ord
+import qualified Data.Tuple as Tuple
+import qualified Data.Maybe as Maybe
 
 --------------------------------------------------------------------------------
 -- Part 1: check whether a played hand is a certain hand type
 
--- Function to count the number of occurrences of a given rank in a hand
-numOccurrencesRank :: Hand -> Rank -> Int
-numOccurrencesRank hand cardRank = length $ filter (\(Card r _) -> r == cardRank) hand
+-- Function to count the number of occurrences of a given rank/suit in a hand
+numOccurrences :: (Eq a) => (Card -> a) -> a -> Hand -> Int
+numOccurrences f target = length . filter (\c -> f c == target)
 
--- Function to count the number of occurrences of a given suit in a hand
-numOccurrencesSuit :: Hand -> Suit -> Int
-numOccurrencesSuit hand cardSuit = length $ filter (\(Card _ s) -> s == cardSuit) hand
+-- Constant to store all the ranks
+allRanks :: [Rank]
+allRanks = [(minBound :: Rank) ..]
+
+-- Constant to store all the suits
+allSuites :: [Suit]
+allSuites = [(minBound :: Suit) ..]
 
 -- Function to count the occurrences of each rank in a hand
 countRanks :: Hand -> [Int]
-countRanks hand = filter (> 0) [numOccurrencesRank hand r | r <- [Two ..]]
+countRanks hand = filter (> 0) [numOccurrences rank r hand | r <- allRanks]
 
 {-Check if there are at least k instances of a given occurrence or higher 
     in the list of occurrences of a hand -}
 enoughRankCount :: Hand -> Int -> Int -> Bool
 enoughRankCount hand count target = length (filter (>=count) $ countRanks hand) == target
 
+-- Function to remove duplicates from a list
+removeDuplicates :: Ord a => [a] -> [a]
+removeDuplicates = Set.toList . Set.fromList
+
 -- Function to get ranks from a hand
 ranks :: Hand -> [Rank]
-ranks = map (\(Card r _) -> r)
+ranks = map rank
+
+-- Function to get suits from a hand
+suits :: Hand -> [Suit]
+suits = map suit
 
 -- Function to get unique suites from a hand
 uniqueSuites :: Hand -> [Suit]
-uniqueSuites hand = toList $ fromList $ map (\(Card _ s) -> s) hand
+uniqueSuites = removeDuplicates . suits
 
 -- Function to get unique ranks from a hand
 uniqueRanks :: Hand -> [Rank]
-uniqueRanks hand = toList $ fromList (ranks hand)
+uniqueRanks = removeDuplicates . ranks
 
 -- Function to check if a hand is ascending
 isAscending :: Hand -> Bool
 isAscending hand =
-    let scores = sort $ map fromEnum $ ranks hand
+    let scores = List.sort $ map fromEnum $ ranks hand
     in and [b - a == 1 | (a, b) <- zip scores (tail scores)]
 
 -- Function to check if a hand is straight
 isStraight :: Hand -> Bool
 isStraight hand =
-    let handRanks = sort $ ranks hand
+    let handRanks = List.sort $ ranks hand
     in length hand == 5 && (handRanks == [Two, Three, Four, Five, Ace] || isAscending hand)
 
 -- Function to check if a hand is a high card
@@ -57,8 +69,8 @@ isHighCard :: Hand -> Bool
 isHighCard hand = 
     not (null hand) && -- the hand is not empty
     not (isStraight hand) && -- the hand is not straight
-    length (uniqueRanks hand) == length hand  && -- each rank occurs exactly once
-    length (uniqueSuites hand) > 1
+    length (uniqueRanks hand) == length hand && -- each rank occurs exactly once
+    not (isFlush hand) -- the hand is not a flush
 
 -- Function to check if a hand is flush
 isFlush :: Hand -> Bool
@@ -66,22 +78,22 @@ isFlush hand = length (uniqueSuites hand) == 1 && length hand == 5
 
 -- Function to check if a hand is royal (equal to ranks 10, J, Q, K, A)
 isRoyal :: Hand -> Bool
-isRoyal hand = sort (ranks hand) == [Ten, Jack, Queen, King, Ace]
+isRoyal hand = List.sort (ranks hand) == [Ten, Jack, Queen, King, Ace]
 
 -- Main function for Exercise 1
 contains :: Hand -> HandType -> Bool
 contains hand handType
-    | handType == RoyalFlush && isRoyal hand && isFlush hand = True
-    | handType == StraightFlush && isStraight hand && isFlush hand = True
-    | handType == FourOfAKind && enoughRankCount hand 4 1 = True
-    | handType == FullHouse && sort (countRanks hand) == [2, 3] = True
-    | handType == Flush && isFlush hand = True
-    | handType == Straight && isStraight hand = True
-    | handType == ThreeOfAKind && enoughRankCount hand 3 1 = True
-    | handType == TwoPair && enoughRankCount hand 2 2 = True
-    | handType == Pair && enoughRankCount hand 2 1 = True
-    | handType == HighCard && isHighCard hand = True
-    | handType == None && null hand = True
+    | handType == RoyalFlush && isRoyal hand && isFlush hand            ||
+      handType == StraightFlush && isStraight hand && isFlush hand      ||
+      handType == FourOfAKind && enoughRankCount hand 4 1               ||
+      handType == FullHouse && List.sort (countRanks hand) == [2, 3]    ||
+      handType == Flush && isFlush hand                                 ||
+      handType == Straight && isStraight hand                           ||
+      handType == ThreeOfAKind && enoughRankCount hand 3 1              ||
+      handType == TwoPair && enoughRankCount hand 2 2                   ||
+      handType == Pair && enoughRankCount hand 2 1                      ||
+      handType == HighCard && isHighCard hand                           ||
+      handType == None && null hand                                  = True
     | otherwise = False
 
 --------------------------------------------------------------------------------
@@ -94,14 +106,14 @@ bestHandTypeFrom hand (x:xs) = if contains hand x then x else bestHandTypeFrom h
 
 -- Main function for Exericse 2
 bestHandType :: Hand -> HandType
-bestHandType hand = bestHandTypeFrom hand $ reverse [None ..]
+bestHandType hand = bestHandTypeFrom hand $ reverse [(minBound :: HandType) .. ]
 
 --------------------------------------------------------------------------------
 -- Part 3: score a played hand
 
 -- Function to count number of times each rank occurs in the hand
 counterRank :: Hand -> [(Rank, Int)]
-counterRank hand = [(r, numOccurrencesRank hand r) | r <- [Two ..]]
+counterRank hand = [(r, numOccurrences rank r hand) | r <- allRanks]
 
 -- Function to get the ranks with a certain count in the hand
 rankWithCount :: Hand -> Int -> [Rank]
@@ -143,30 +155,28 @@ scoreHand hand =
         best = bestHandType hand
         base = fst (handTypeValues best)
         mult = snd (handTypeValues best)
-        cardVals = sum (map (rankScore . (\(Card r _) -> r)) scoreCards)
+        cardVals = sum (map (rankScore . rank) scoreCards)
     in
         (base + cardVals) * mult
 
 --------------------------------------------------------------------------------
 -- Part 4: find the highest scoring hand of 5 cards out of n>=5 cards
 
+{- Original combinations method for Exercise 5, now only used to testing. -}
+
 -- Function to check if an item is less than or equal to another item
 isLessThanStarting :: Ord a => [a] -> a -> Bool
 isLessThanStarting [] _ = True
 isLessThanStarting (x:_) y = y <= x
 
--- Function to remove duplicates from a list
-removeDuplicates :: Ord a => [a] -> [a]
-removeDuplicates xs = toList $ fromList xs
-
 -- Function to get all possible combinations of r items from n >= r items
 combinations :: Ord a => [a] -> Int -> [[a]]
 combinations _ 0 = [[]]
 combinations xs k = removeDuplicates [x : y | x <- xs, 
-                    y <- combinations (xs \\ [x]) (k-1), 
+                    y <- combinations (xs List.\\ [x]) (k-1), 
                     isLessThanStarting y x]
 
--- -- Main function for Exercise 5
+-- Original function for Ex. 5, no longer used anymore, only used for testing.
 highestScoringHand' :: [Card] -> Hand
 highestScoringHand' [] = []
 highestScoringHand' xs =
@@ -182,9 +192,7 @@ highestScoringHand' xs =
             in head $ filter (\h -> maximum h == largest) maxHands
         _ -> choice
 
--- List of all of the suits
-allSuits :: [Suit]
-allSuits = [(minBound :: Suit) ..]
+{- New method for Exercise 5, tested against the original method in the correctness test -}
 
 -- Function to check if a list contains a sublist in any order
 containsList :: Eq a => [a] -> [a] -> Bool
@@ -197,11 +205,13 @@ royalFlushSuit s = [Card Ace s, Card King s, Card Queen s, Card Jack s, Card Ten
 -- Function that returns the best royal flush hand and score if exist, and nothing otherwise
 bestRoyalFlush :: [Card] -> Maybe (Hand, Int)
 bestRoyalFlush hand = 
-    let poss = [sample | s <- allSuits, let sample = royalFlushSuit s, containsList sample hand]
+    let poss = [sample | s <- allSuites, 
+                let sample = royalFlushSuit s, 
+                containsList sample hand]
     in case poss of
             [] -> Nothing
             xs -> let choice = head xs
-                    in Just (choice, scoreHand choice)
+                  in Just (choice, scoreHand choice)
 
 -- Function to get straights from a list of cards
 straightsFrom :: [Card] -> [Hand]
@@ -230,16 +240,16 @@ allStraightsFrom cards =
 
 -- Function to get straight flushes from a list of cards
 straightFlushesFrom :: [Card] -> [Hand]
-straightFlushesFrom cards = concat [allStraightsFrom $ filter (\c -> suit c == s) cards | s <- allSuits]
+straightFlushesFrom cards = concat [allStraightsFrom $ filter (\c -> suit c == s) cards | s <- allSuites]
 
 -- Function to get the maximum key and its score from a list of keys and a scoring function
 maxKey :: (Ord a, Ord b) => [a] -> (a -> b) -> (a, b)
-maxKey xs f = swap $ maximum [(f x, x) | x <- xs]
+maxKey xs f = Tuple.swap $ maximum [(f x, x) | x <- xs]
 
 -- Function that returns the best straight flush and score if exist, and nothing otherwise
 bestStraightFlush :: [Card] -> Maybe (Hand, Int)
 bestStraightFlush hand = 
-    case straightFlushesFrom (sort hand) of
+    case straightFlushesFrom (List.sort hand) of
         [] -> Nothing
         xs -> Just $ maxKey xs scoreHand
 
@@ -283,12 +293,12 @@ bestFullHouse cards =
 
 -- Function to remove duplicate ranked cards from a hand of cards
 uniqueRankHand :: [Card] -> [Card]
-uniqueRankHand cards = [head poss | r <- [(minBound :: Rank) ..], let poss = filter (\c -> rank c == r) cards, not $ null poss]
+uniqueRankHand cards = [head poss | r <- allRanks, let poss = filter (\c -> rank c == r) cards, not $ null poss]
 
 -- Function that returns the best straights and score if exist, and nothing otherwise
 bestStraights :: [Card] -> Maybe (Hand, Int)
 bestStraights cards =
-    case allStraightsFrom $ sort $ uniqueRankHand cards of
+    case allStraightsFrom $ List.sort $ uniqueRankHand cards of
         [] -> Nothing
         xs -> let choice = fst $ maxKey xs scoreHand
                 in Just (choice, scoreHand choice)
@@ -298,7 +308,7 @@ bestTwoPair :: [Card] -> Maybe (Hand, Int)
 bestTwoPair cards
     | length poss < 2 = Nothing
     | otherwise = let 
-        sorted = sortBy (comparing (rank . head)) poss
+        sorted = List.sortBy (Ord.comparing (rank . head)) poss
         choice = concat $ take 2 (reverse sorted)
                     in Just (choice, scoreHand choice)
     where poss = cardsWithRankCountAtLeast cards 2
@@ -314,14 +324,13 @@ bestHandAndScoreFrom cards =
 -- Function that returns the best flush and score if exist, and nothing otherwise
 bestFlushes :: [Card] -> Maybe (Hand, Int)
 bestFlushes cards =
-    let poss = [bestHandAndScoreFrom xs | s <- allSuits, let xs = filter (\c -> suit c == s) cards, length xs >= 5]
+    let poss = [bestHandAndScoreFrom xs | s <- allSuites, let xs = filter (\c -> suit c == s) cards, length xs >= 5]
     in case poss of
         [] -> Nothing
-        _ -> Just (swap $ maximum (map swap poss))
+        _ -> Just (Tuple.swap $ maximum (map Tuple.swap poss))
 
 -- Main Function for Exercise 5
 highestScoringHand :: [Card] -> Hand
--- highestScoringHand = highestScoringHand'
 highestScoringHand [] = []
 highestScoringHand hand = 
     let options = [bestRoyalFlush hand
@@ -334,29 +343,24 @@ highestScoringHand hand =
                   ,bestTwoPair hand
                   ,bestNOfAKind hand 2
                   ,bestNOfAKind hand 1]
-        actualOptions = catMaybes options
-        scoringCards = snd $ maximum (map swap actualOptions)
-    in scoringCards ++ take (5 - length scoringCards) (sort $ hand \\ scoringCards)
-    -- in snd $ maximum (map swap actualOptions)
+        actualOptions = Maybe.catMaybes options
+        scoringCards = snd $ maximum (map Tuple.swap actualOptions)
+    in scoringCards ++ take (5 - length scoringCards) (List.sort $ hand List.\\ scoringCards)
 
 --------------------------------------------------------------------------------
 -- Part 5: implement an AI for maximising score across 3 hands and 3 discards
 
 -- Main function for Exercise 6
 simpleAI :: [Move] -> [Card] -> Move
-simpleAI _ cards = Move Play $ take 5 $ reverse $ sort cards
+simpleAI _ cards = Move Play $ take 5 $ reverse $ List.sort cards
 
 -- Main function for Exercise 7
 sensibleAI :: [Move] -> [Card] -> Move
 sensibleAI _ cards = Move Play $ highestScoringHand cards
 
--- Function to get best hand type from the hand of eight
-bestHandTypeFromHand :: [Card] -> HandType
-bestHandTypeFromHand hand = maximum $ map bestHandType (combinations hand 5)
-
 -- Function to get list of ordered ranks from hand of eight
 orderedRanks :: Hand -> [Rank]
-orderedRanks hand = sort $ toList $ fromList $ ranks hand
+orderedRanks hand = List.sort $ Set.toList $ Set.fromList $ ranks hand
 
 -- Function to get number of consecutive elements above current position
 numAbove :: [Rank] -> Int
@@ -382,7 +386,7 @@ numConsecutive hand card =
     let
         sortedRanks = orderedRanks hand
         cardRank = rank card
-        maybeIndex = elemIndex cardRank sortedRanks
+        maybeIndex = List.elemIndex cardRank sortedRanks
     in case maybeIndex of
         Nothing -> 0
         (Just i) -> numAboveBelow i sortedRanks
@@ -419,7 +423,7 @@ evaluateCard :: Hand -> [Card] -> Card -> Float
 evaluateCard hand remainingCards card = 
     let
         -- initial variables we calculate
-        numSuits = numOccurrencesSuit hand (suit card)
+        numSuits = numOccurrences suit (suit card) hand
         numCons = numConsecutive hand card
 
         -- the actual things we use
@@ -446,12 +450,12 @@ numDiscards moveHistory = 3 - length (filter isDiscard moveHistory)
 -- Function to sort the hand of cards by the evaluation function
 sortByEvaluation :: [Move] -> [Card] -> [Card]
 sortByEvaluation moveHistory cards = 
-    let remainingCards = originalDeck \\ usedCards moveHistory
-    in sortBy (comparing $ evaluateCard cards remainingCards) cards
+    let remainingCards = originalDeck List.\\ usedCards moveHistory
+    in List.sortBy (Ord.comparing $ evaluateCard cards remainingCards) cards
 
 -- Function to get the maximum partial-flush length in the hand
 maxPartialFlush :: [Card] -> Int
-maxPartialFlush cards = maximum [numOccurrencesSuit cards s | s <- [(minBound :: Suit) .. ]]
+maxPartialFlush cards = maximum [numOccurrences suit s cards | s <- allSuites]
 
 -- Function to get the maximum partial straight length in the hand
 maxPartialStraight :: [Card] -> Int
@@ -478,7 +482,7 @@ usedCards = concatMap getUsedCards
 
 -- Constant to store the original deck of cards
 originalDeck :: [Card]
-originalDeck = [Card r s | r <- [(minBound :: Rank) ..], s <- [(minBound :: Suit) .. ]]
+originalDeck = [Card r s | r <- allRanks, s <- allSuites]
 
 -- Main function for Exercise 8
 myAI :: [Move] -> [Card] -> Move
@@ -487,7 +491,7 @@ myAI moveHistory cards
         Move Discard $ take (numToDiscard cards) $ sortByEvaluation moveHistory cards
     | otherwise = let 
                     choice = whichCardsScore $ highestScoringHand cards
-                    orderedCards = sortByEvaluation moveHistory (cards \\ choice)
+                    orderedCards = sortByEvaluation moveHistory (cards List.\\ choice)
                     in Move Play (choice ++ take (5 - length choice) orderedCards)
     where 
         best = bestHandType $ highestScoringHand cards
