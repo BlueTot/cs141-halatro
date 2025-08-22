@@ -2,11 +2,11 @@
 
 A card game similar to Balatro's Ante 1 written in Haskell, containing an AI that can score on average 744 points per run. The player has 3 plays and 3 discards, and is given a hand of 8 cards that refills after each play/discard. The score is determined by the strength of the hands played.
 
-### Coursework
+## Coursework
 
 This was coursework for CS141 Functional Programming, and the assignment scored 88%.
 
-### Installation
+## Installation
 
 First, clone the repository.
 
